@@ -120,6 +120,8 @@ prices.forEach(price => {
 ### Oscillators
 - **RSI** - Relative Strength Index
 - **CCI** - Commodity Channel Index
+- **Awesome Oscillator** - Awesome Oscillator (AO)
+- **Stochastic RSI** - Stochastic RSI (%K, %D)
 
 ### Momentum Indicators
 - **ROC** - Rate of Change
@@ -130,20 +132,28 @@ prices.forEach(price => {
 - **DPO** - Detrended Price Oscillator (removes trend component)
 - **Price Oscillator** - Difference between fast and slow moving averages
 - **PPO** - Percentage Price Oscillator (MACD in percentage terms)
+- **PSAR** - Parabolic Stop and Reverse
+- **KST** - Know Sure Thing
 
 ### Volume Indicators
 - **OBV** - On-Balance Volume
 - **ADL** - Accumulation/Distribution Line
 - **VWAP** - Volume Weighted Average Price
+- **Force Index** - Force Index
+- **MFI** - Money Flow Index
+- **Volume Profile** - Volume Profile analysis
 
 ### Volatility Indicators
 - **Bollinger Bands** - Bollinger Bands with %B and Width
 - **ATR** - Average True Range
 - **Donchian Channels** - Highest high and lowest low channels with middle line
 - **Volatility Index** - Statistical measure of price volatility
+- **Keltner Channels** - Keltner Channels
+- **Chandelier Exit** - Chandelier Exit stop loss
 
 ### Directional Movement
 - **True Range** - True Range calculation
+- **ADX** - Average Directional Index
 
 ### Trend Indicators
 - **SuperTrend** - Trend-following indicator using ATR
@@ -152,10 +162,34 @@ prices.forEach(price => {
 - **Linear Regression** - Statistical trend analysis with slope, intercept and forecast
 - **Moving Average Envelope** - Moving average with percentage-based upper and lower bands
 - **Pivot Points** - Support and resistance levels (Standard, Fibonacci, Camarilla, Woodie)
+- **Ichimoku Cloud** - Ichimoku Kinko Hyo cloud indicator
 
 ### Candlestick Patterns
 - **Doji** - Doji pattern detection
+- **Dragonfly Doji** - Dragonfly Doji pattern detection
+- **Gravestone Doji** - Gravestone Doji pattern detection
 - **Bullish/Bearish Engulfing** - Engulfing pattern detection
+- **Hammer Pattern** - Hammer pattern detection (confirmed and unconfirmed)
+- **Hanging Man** - Hanging Man pattern detection (confirmed and unconfirmed)
+- **Shooting Star** - Shooting Star pattern detection (confirmed and unconfirmed)
+- **Bullish/Bearish Harami** - Harami pattern detection
+- **Bullish/Bearish Harami Cross** - Harami Cross pattern detection
+- **Bullish/Bearish Marubozu** - Marubozu pattern detection
+- **Bullish/Bearish Spinning Top** - Spinning Top pattern detection
+- **Bullish/Bearish Hammer Stick** - Hammer Stick pattern detection
+- **Bullish/Bearish Inverted Hammer Stick** - Inverted Hammer Stick pattern detection
+- **Piercing Line** - Piercing Line pattern detection
+- **Dark Cloud Cover** - Dark Cloud Cover pattern detection
+- **Morning Star** - Morning Star pattern detection
+- **Evening Star** - Evening Star pattern detection
+- **Morning Doji Star** - Morning Doji Star pattern detection
+- **Evening Doji Star** - Evening Doji Star pattern detection
+- **Three White Soldiers** - Three White Soldiers pattern detection
+- **Three Black Crows** - Three Black Crows pattern detection
+- **Tweezer Top/Bottom** - Tweezer pattern detection
+- **Abandoned Baby** - Abandoned Baby pattern detection
+- **Downside Tasuki Gap** - Downside Tasuki Gap pattern detection
+- **General Bullish/Bearish** - General bullish/bearish pattern detection
 
 ### Utilities
 - **Highest** - Highest value over period
@@ -165,6 +199,13 @@ prices.forEach(price => {
 - **Average Gain** - Average of positive changes
 - **Average Loss** - Average of negative changes
 - **Cross Up/Down** - Detect line crossovers
+
+### Chart Types
+- **Heikin Ashi** - Heikin Ashi candlesticks
+- **Renko** - Renko charts
+
+### Additional Indicators
+- **Fibonacci Retracement** - Fibonacci retracement levels
 
 ## 📊 API Reference
 
