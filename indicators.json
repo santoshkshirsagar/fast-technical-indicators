@@ -1,0 +1,920 @@
+{
+    "sma": {
+        "label": "Simple Moving Average",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "ema": {
+        "label": "Exponential Moving Average",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 12
+        }
+    },
+    "wma": {
+        "label": "Weighted Moving Average",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "wema": {
+        "label": "Weighted Exponential Moving Average",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "macd": {
+        "label": "Moving Average Convergence Divergence",
+        "inputs": {
+            "values": "array",
+            "fastPeriod": "number",
+            "slowPeriod": "number",
+            "signalPeriod": "number",
+            "SimpleMAOscillator": "boolean",
+            "SimpleMASignal": "boolean"
+        },
+        "default": {
+            "fastPeriod": 12,
+            "slowPeriod": 26,
+            "signalPeriod": 9,
+            "SimpleMAOscillator": false,
+            "SimpleMASignal": false
+        },
+        "outputs": {
+            "MACD": "number",
+            "signal": "number",
+            "histogram": "number"
+        }
+    },
+    "rsi": {
+        "label": "Relative Strength Index",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "cci": {
+        "label": "Commodity Channel Index",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 20
+        }
+    },
+    "awesomeoscillator": {
+        "label": "Awesome Oscillator",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "fastPeriod": "number",
+            "slowPeriod": "number"
+        },
+        "default": {
+            "fastPeriod": 5,
+            "slowPeriod": 34
+        }
+    },
+    "stochasticrsi": {
+        "label": "Stochastic RSI",
+        "inputs": {
+            "values": "array",
+            "rsiPeriod": "number",
+            "stochasticPeriod": "number",
+            "kPeriod": "number",
+            "dPeriod": "number"
+        },
+        "default": {
+            "rsiPeriod": 14,
+            "stochasticPeriod": 14,
+            "kPeriod": 3,
+            "dPeriod": 3
+        },
+        "outputs": {
+            "stochRSI": "number",
+            "k": "number",
+            "d": "number"
+        }
+    },
+    "bollingerbands": {
+        "label": "Bollinger Bands",
+        "inputs": {
+            "period": "number",
+            "stdDev": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 20,
+            "stdDev": 2
+        },
+        "outputs": {
+            "middle": "number",
+            "upper": "number",
+            "lower": "number",
+            "pb": "number"
+        }
+    },
+    "adx": {
+        "label": "Average Directional Index",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 14
+        },
+        "outputs": {
+            "adx": "number",
+            "pdi": "number",
+            "mdi": "number"
+        }
+    },
+    "atr": {
+        "label": "Average True Range",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "truerange": {
+        "label": "True Range",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array"
+        }
+    },
+    "keltnerchannels": {
+        "label": "Keltner Channels",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period": "number",
+            "multiplier": "number"
+        },
+        "default": {
+            "period": 20,
+            "multiplier": 2
+        },
+        "outputs": {
+            "middle": "number",
+            "upper": "number",
+            "lower": "number"
+        }
+    },
+    "chandelierexit": {
+        "label": "Chandelier Exit",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period": "number",
+            "multiplier": "number"
+        },
+        "default": {
+            "period": 22,
+            "multiplier": 3
+        },
+        "outputs": {
+            "exitLong": "number",
+            "exitShort": "number"
+        }
+    },
+    "roc": {
+        "label": "Rate of Change",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 12
+        }
+    },
+    "kst": {
+        "label": "Know Sure Thing",
+        "inputs": {
+            "ROCPer1": "number",
+            "ROCPer2": "number",
+            "ROCPer3": "number",
+            "ROCPer4": "number",
+            "SMAROCPer1": "number",
+            "SMAROCPer2": "number",
+            "SMAROCPer3": "number",
+            "SMAROCPer4": "number",
+            "signalPeriod": "number",
+            "values": "array"
+        },
+        "default": {
+            "ROCPer1": 10,
+            "ROCPer2": 15,
+            "ROCPer3": 20,
+            "ROCPer4": 30,
+            "SMAROCPer1": 10,
+            "SMAROCPer2": 10,
+            "SMAROCPer3": 10,
+            "SMAROCPer4": 15,
+            "signalPeriod": 9
+        },
+        "outputs": {
+            "kst": "number",
+            "signal": "number"
+        }
+    },
+    "psar": {
+        "label": "Parabolic Stop and Reverse",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "step": "number",
+            "max": "number"
+        },
+        "default": {
+            "step": 0.02,
+            "max": 0.2
+        }
+    },
+    "stochastic": {
+        "label": "Stochastic Oscillator",
+        "inputs": {
+            "period": "number",
+            "low": "array",
+            "high": "array",
+            "close": "array",
+            "signalPeriod": "number"
+        },
+        "default": {
+            "period": 14,
+            "signalPeriod": 3
+        },
+        "outputs": {
+            "k": "number",
+            "d": "number"
+        }
+    },
+    "williamsr": {
+        "label": "Williams %R",
+        "inputs": {
+            "low": "array",
+            "high": "array",
+            "close": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "trix": {
+        "label": "Triple Exponential Average",
+        "inputs": {
+            "values": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 18
+        }
+    },
+    "adl": {
+        "label": "Accumulation/Distribution Line",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "volume": "array"
+        }
+    },
+    "obv": {
+        "label": "On-Balance Volume",
+        "inputs": {
+            "close": "array",
+            "volume": "array"
+        }
+    },
+    "forceindex": {
+        "label": "Force Index",
+        "inputs": {
+            "close": "array",
+            "volume": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 13
+        }
+    },
+    "vwap": {
+        "label": "Volume Weighted Average Price",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "volume": "array"
+        }
+    },
+    "volumeprofile": {
+        "label": "Volume Profile",
+        "inputs": {
+            "close": "array",
+            "volume": "array",
+            "noOfBars": "number"
+        },
+        "default": {
+            "noOfBars": 14
+        },
+        "outputs": {
+            "rangeStart": "number",
+            "rangeEnd": "number",
+            "volume": "number",
+            "percentage": "number"
+        }
+    },
+    "mfi": {
+        "label": "Money Flow Index",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "volume": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "averagegain": {
+        "label": "Average Gain",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "averageloss": {
+        "label": "Average Loss",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "sd": {
+        "label": "Standard Deviation",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "highest": {
+        "label": "Highest Value",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "lowest": {
+        "label": "Lowest Value",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "sum": {
+        "label": "Sum",
+        "inputs": {
+            "period": "number",
+            "values": "array"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "crossUp": {
+        "label": "Cross Up",
+        "inputs": {
+            "lineA": "array",
+            "lineB": "array"
+        }
+    },
+    "crossDown": {
+        "label": "Cross Down",
+        "inputs": {
+            "lineA": "array",
+            "lineB": "array"
+        }
+    },
+    "ichimokucloud": {
+        "label": "Ichimoku Cloud",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "conversionPeriod": "number",
+            "basePeriod": "number",
+            "spanPeriod": "number",
+            "displacement": "number"
+        },
+        "default": {
+            "conversionPeriod": 9,
+            "basePeriod": 26,
+            "spanPeriod": 52,
+            "displacement": 26
+        },
+        "outputs": {
+            "conversion": "number",
+            "base": "number",
+            "spanA": "number",
+            "spanB": "number"
+        },
+        "offset": {
+            "spanA": 26,
+            "spanB": 26
+        }
+    },
+    "renko": {
+        "label": "Renko Charts",
+        "inputs": {
+            "candles": "array",
+            "brickSize": "number"
+        },
+        "outputs": {
+            "open": "number",
+            "close": "number",
+            "high": "number",
+            "low": "number",
+            "trend": "number"
+        }
+    },
+    "heikinashi": {
+        "label": "Heikin Ashi",
+        "inputs": {
+            "candles": "array"
+        },
+        "outputs": {
+            "open": "number",
+            "high": "number",
+            "low": "number",
+            "close": "number"
+        }
+    },
+    "fibonacciretracement": {
+        "label": "Fibonacci Retracement",
+        "inputs": {
+            "high": "number",
+            "low": "number"
+        },
+        "outputs": {
+            "level": "number",
+            "value": "number",
+            "percentage": "string"
+        }
+    },
+    "doji": {
+        "label": "Doji Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "dragonflydoji": {
+        "label": "Dragonfly Doji Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "gravestonedoji": {
+        "label": "Gravestone Doji Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullishengulfingpattern": {
+        "label": "Bullish Engulfing Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearishengulfingpattern": {
+        "label": "Bearish Engulfing Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "hammerpattern": {
+        "label": "Hammer Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "hammerpatternunconfirmed": {
+        "label": "Hammer Pattern (Unconfirmed)",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "hangingman": {
+        "label": "Hanging Man Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "hangingmanunconfirmed": {
+        "label": "Hanging Man Pattern (Unconfirmed)",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "shootingstar": {
+        "label": "Shooting Star Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "shootingstarunconfirmed": {
+        "label": "Shooting Star Pattern (Unconfirmed)",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullishharami": {
+        "label": "Bullish Harami Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearishharami": {
+        "label": "Bearish Harami Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullishharamicross": {
+        "label": "Bullish Harami Cross Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearishharamicross": {
+        "label": "Bearish Harami Cross Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullishmarubozu": {
+        "label": "Bullish Marubozu Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearishmarubozu": {
+        "label": "Bearish Marubozu Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullishspinningtop": {
+        "label": "Bullish Spinning Top Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearishspinningtop": {
+        "label": "Bearish Spinning Top Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullishhammerstick": {
+        "label": "Bullish Hammer Stick Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearishhammerstick": {
+        "label": "Bearish Hammer Stick Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullishinvertedhammerstick": {
+        "label": "Bullish Inverted Hammer Stick Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearishinvertedhammerstick": {
+        "label": "Bearish Inverted Hammer Stick Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "piercingline": {
+        "label": "Piercing Line Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "darkcloudcover": {
+        "label": "Dark Cloud Cover Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "morningstar": {
+        "label": "Morning Star Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "eveningstar": {
+        "label": "Evening Star Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "morningdojistar": {
+        "label": "Morning Doji Star Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "eveningdojistar": {
+        "label": "Evening Doji Star Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "threewhitesoldiers": {
+        "label": "Three White Soldiers Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "threeblackcrows": {
+        "label": "Three Black Crows Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "tweezertop": {
+        "label": "Tweezer Top Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "tweezerbottom": {
+        "label": "Tweezer Bottom Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "abandonedbaby": {
+        "label": "Abandoned Baby Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "downsidetasukigap": {
+        "label": "Downside Tasuki Gap Pattern",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bullish": {
+        "label": "General Bullish Pattern Detection",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "bearish": {
+        "label": "General Bearish Pattern Detection",
+        "inputs": {
+            "candles": "array"
+        }
+    },
+    "supertrend": {
+        "label": "SuperTrend",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period": "number",
+            "multiplier": "number"
+        },
+        "default": {
+            "period": 10,
+            "multiplier": 3
+        },
+        "outputs": {
+            "supertrend": "number",
+            "direction": "number"
+        }
+    },
+    "aroon": {
+        "label": "Aroon Indicator",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 14
+        },
+        "outputs": {
+            "aroonUp": "number",
+            "aroonDown": "number",
+            "aroonOscillator": "number"
+        }
+    },
+    "aroonoscillator": {
+        "label": "Aroon Oscillator",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 14
+        }
+    },
+    "linearregression": {
+        "label": "Linear Regression",
+        "inputs": {
+            "values": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 14
+        },
+        "outputs": {
+            "slope": "number",
+            "intercept": "number",
+            "forecast": "number",
+            "rSquared": "number"
+        }
+    },
+    "maenvelope": {
+        "label": "Moving Average Envelope",
+        "inputs": {
+            "values": "array",
+            "period": "number",
+            "percentage": "number",
+            "maType": "string"
+        },
+        "default": {
+            "period": 20,
+            "percentage": 2.5,
+            "maType": "sma"
+        },
+        "outputs": {
+            "upper": "number",
+            "middle": "number",
+            "lower": "number"
+        }
+    },
+    "pivotpoints": {
+        "label": "Pivot Points",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "type": "string"
+        },
+        "default": {
+            "type": "standard"
+        },
+        "outputs": {
+            "pivot": "number",
+            "r1": "number",
+            "r2": "number",
+            "r3": "number",
+            "s1": "number",
+            "s2": "number",
+            "s3": "number"
+        }
+    },
+    "ultimateoscillator": {
+        "label": "Ultimate Oscillator",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period1": "number",
+            "period2": "number",
+            "period3": "number"
+        },
+        "default": {
+            "period1": 7,
+            "period2": 14,
+            "period3": 28
+        }
+    },
+    "dpo": {
+        "label": "Detrended Price Oscillator",
+        "inputs": {
+            "values": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 21
+        }
+    },
+    "priceoscillator": {
+        "label": "Price Oscillator",
+        "inputs": {
+            "values": "array",
+            "fastPeriod": "number",
+            "slowPeriod": "number",
+            "maType": "string"
+        },
+        "default": {
+            "fastPeriod": 12,
+            "slowPeriod": 26,
+            "maType": "ema"
+        }
+    },
+    "ppo": {
+        "label": "Percentage Price Oscillator",
+        "inputs": {
+            "values": "array",
+            "fastPeriod": "number",
+            "slowPeriod": "number",
+            "signalPeriod": "number"
+        },
+        "default": {
+            "fastPeriod": 12,
+            "slowPeriod": 26,
+            "signalPeriod": 9
+        },
+        "outputs": {
+            "ppo": "number",
+            "signal": "number",
+            "histogram": "number"
+        }
+    },
+    "donchianchannels": {
+        "label": "Donchian Channels",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 20
+        },
+        "outputs": {
+            "upper": "number",
+            "middle": "number",
+            "lower": "number",
+            "width": "number"
+        }
+    },
+    "volatilityindex": {
+        "label": "Volatility Index",
+        "inputs": {
+            "values": "array",
+            "period": "number"
+        },
+        "default": {
+            "period": 30
+        }
+    }
+}
