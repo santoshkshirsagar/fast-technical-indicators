@@ -1,28 +1,39 @@
 import { vwap, VWAP } from '../src/volume/vwap';
 import { vwap as referenceVWAP } from 'technicalindicators';
+import testDataRaw from './data.json';
 
 describe('VWAP (Volume Weighted Average Price)', () => {
-  const testData = {
-    high: [127.01, 127.62, 126.59, 127.35, 128.17, 128.43, 127.37, 126.42, 126.90, 126.85],
-    low: [125.36, 126.16, 124.93, 126.09, 126.82, 126.48, 125.81, 124.83, 126.39, 125.72],
-    close: [125.85, 126.48, 125.01, 127.02, 127.32, 127.11, 126.80, 126.13, 126.53, 125.81],
-    volume: [25200, 30000, 25600, 32000, 23000, 40000, 36000, 20500, 23000, 27500]
+  // Use all data points from data.json for testing
+  const testDataArray = Array.isArray(testDataRaw) ? testDataRaw : [testDataRaw];
+  const vwapTestData = {
+    high: testDataArray.map(d => d.high),
+    low: testDataArray.map(d => d.low),
+    close: testDataArray.map(d => d.close),
+    volume: testDataArray.map(d => d.volume)
   };
 
-  test('functional VWAP should match reference implementation', () => {
-    const ourResult = vwap({ 
-      high: testData.high, 
-      low: testData.low, 
-      close: testData.close, 
-      volume: testData.volume 
-    });
+  const smallTestData = {
+    high: [127.01, 127.62, 126.59, 127.35, 128.17],
+    low: [125.36, 126.16, 124.93, 126.09, 126.82],
+    close: [125.85, 126.48, 125.01, 127.02, 127.32],
+    volume: [25200, 30000, 25600, 32000, 23000]
+  };
+
+  test('functional VWAP should match reference implementation with real market data', () => {
+    const ourResult = vwap(vwapTestData);
+    const referenceResult = referenceVWAP(vwapTestData);
     
-    const referenceResult = referenceVWAP({
-      high: testData.high,
-      low: testData.low,
-      close: testData.close,
-      volume: testData.volume
-    });
+    expect(ourResult).toHaveLength(referenceResult.length);
+    expect(ourResult).toHaveLength(testDataArray.length);
+    
+    for (let i = 0; i < ourResult.length; i++) {
+      expect(ourResult[i]).toBeCloseTo(referenceResult[i], 4);
+    }
+  });
+
+  test('functional VWAP should work with small test data', () => {
+    const ourResult = vwap(smallTestData);
+    const referenceResult = referenceVWAP(smallTestData);
     
     expect(ourResult).toHaveLength(referenceResult.length);
     
@@ -31,22 +42,15 @@ describe('VWAP (Volume Weighted Average Price)', () => {
     }
   });
 
-  test('class-based VWAP should work correctly', () => {
-    const ourVWAP = new VWAP({ high: [], low: [], close: [], volume: [] });
-    const referenceResult = referenceVWAP({
-      high: testData.high,
-      low: testData.low,
-      close: testData.close,
-      volume: testData.volume
-    });
+  test('class-based VWAP should work correctly with streaming data', () => {
+    const ourVWAP = new VWAP();
+    const referenceResult = referenceVWAP(vwapTestData);
     
     let streamResults: number[] = [];
     
-    for (let i = 0; i < testData.high.length; i++) {
-      const result = ourVWAP.nextValue(testData.high[i], testData.low[i], testData.close[i], testData.volume[i]);
-      if (result !== undefined) {
-        streamResults.push(result);
-      }
+    for (let i = 0; i < vwapTestData.high.length; i++) {
+      const result = ourVWAP.nextValue(vwapTestData.high[i], vwapTestData.low[i], vwapTestData.close[i], vwapTestData.volume[i]);
+      streamResults.push(result);
     }
     
     expect(streamResults).toHaveLength(referenceResult.length);
