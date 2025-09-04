@@ -8,14 +8,20 @@ export interface ADXInput extends IndicatorInput {
   close: number[];
 }
 
-export function adx(input: ADXInput): number[] {
+export interface ADXOutput {
+  adx?: number;
+  pdi?: number;
+  mdi?: number;
+}
+
+export function adx(input: ADXInput): ADXOutput[] {
   const { period = 14, high, low, close } = input;
   
   if (high.length !== low.length || low.length !== close.length || close.length < period + 1) {
     return [];
   }
 
-  const result: number[] = [];
+  const result: ADXOutput[] = [];
   
   // Calculate +DM, -DM, and TR arrays
   const plusDM: number[] = [];
@@ -51,12 +57,14 @@ export function adx(input: ADXInput): number[] {
   let smoothedMinusDM = minusDM.slice(0, period).reduce((sum, val) => sum + val, 0);
   let smoothedTR = trueRanges.slice(0, period).reduce((sum, val) => sum + val, 0);
   
-  // Calculate first ADX
+  // Calculate first DI values
   let plusDI = (smoothedPlusDM / smoothedTR) * 100;
   let minusDI = (smoothedMinusDM / smoothedTR) * 100;
   let dx = Math.abs(plusDI - minusDI) / (plusDI + minusDI) * 100;
   
   const dxValues = [dx];
+  const plusDIValues = [plusDI];
+  const minusDIValues = [minusDI];
   
   // Calculate subsequent values using Wilder's smoothing
   for (let i = period; i < plusDM.length; i++) {
@@ -74,15 +82,25 @@ export function adx(input: ADXInput): number[] {
     }
     
     dxValues.push(dx);
+    plusDIValues.push(plusDI);
+    minusDIValues.push(minusDI);
   }
   
   // Calculate ADX as smoothed average of DX
   let adxValue = dxValues.slice(0, period).reduce((sum, val) => sum + val, 0) / period;
-  result.push(adxValue);
+  result.push({
+    adx: adxValue,
+    pdi: plusDIValues[0],
+    mdi: minusDIValues[0]
+  });
   
   for (let i = period; i < dxValues.length; i++) {
     adxValue = (adxValue * (period - 1) + dxValues[i]) / period;
-    result.push(adxValue);
+    result.push({
+      adx: adxValue,
+      pdi: plusDIValues[i - period + 1],
+      mdi: minusDIValues[i - period + 1]
+    });
   }
   
   return result;
@@ -101,13 +119,15 @@ export class ADX {
   private smoothedMinusDM: number = 0;
   private smoothedTR: number = 0;
   private currentADX: number | undefined;
+  private currentPlusDI: number | undefined;
+  private currentMinusDI: number | undefined;
   private initialized: boolean = false;
 
   constructor(input: ADXInput) {
     this.period = input.period || 14;
   }
 
-  nextValue(high: number, low: number, close: number): NumberOrUndefined {
+  nextValue(high: number, low: number, close: number): ADXOutput | undefined {
     this.highValues.push(high);
     this.lowValues.push(low);
     this.closeValues.push(close);
@@ -140,9 +160,9 @@ export class ADX {
         this.smoothedMinusDM = this.minusDM.reduce((sum, val) => sum + val, 0);
         this.smoothedTR = this.trueRanges.reduce((sum, val) => sum + val, 0);
         
-        const plusDI = (this.smoothedPlusDM / this.smoothedTR) * 100;
-        const minusDI = (this.smoothedMinusDM / this.smoothedTR) * 100;
-        const dx = Math.abs(plusDI - minusDI) / (plusDI + minusDI) * 100;
+        this.currentPlusDI = (this.smoothedPlusDM / this.smoothedTR) * 100;
+        this.currentMinusDI = (this.smoothedMinusDM / this.smoothedTR) * 100;
+        const dx = Math.abs(this.currentPlusDI - this.currentMinusDI) / (this.currentPlusDI + this.currentMinusDI) * 100;
         
         this.dxValues.push(dx);
         this.initialized = true;
@@ -156,31 +176,43 @@ export class ADX {
     this.smoothedMinusDM = (this.smoothedMinusDM * (this.period - 1) + minusDMValue) / this.period;
     this.smoothedTR = (this.smoothedTR * (this.period - 1) + trValue) / this.period;
     
-    const plusDI = (this.smoothedPlusDM / this.smoothedTR) * 100;
-    const minusDI = (this.smoothedMinusDM / this.smoothedTR) * 100;
+    this.currentPlusDI = (this.smoothedPlusDM / this.smoothedTR) * 100;
+    this.currentMinusDI = (this.smoothedMinusDM / this.smoothedTR) * 100;
     
-    const dx = (plusDI + minusDI === 0) ? 0 : Math.abs(plusDI - minusDI) / (plusDI + minusDI) * 100;
+    const dx = (this.currentPlusDI + this.currentMinusDI === 0) ? 0 : Math.abs(this.currentPlusDI - this.currentMinusDI) / (this.currentPlusDI + this.currentMinusDI) * 100;
     this.dxValues.push(dx);
 
     // Calculate ADX
     if (this.currentADX === undefined) {
       if (this.dxValues.length === this.period) {
         this.currentADX = this.dxValues.reduce((sum, val) => sum + val, 0) / this.period;
-        return this.currentADX;
+        return {
+          adx: this.currentADX,
+          pdi: this.currentPlusDI,
+          mdi: this.currentMinusDI
+        };
       }
     } else {
       this.currentADX = (this.currentADX * (this.period - 1) + dx) / this.period;
-      return this.currentADX;
+      return {
+        adx: this.currentADX,
+        pdi: this.currentPlusDI,
+        mdi: this.currentMinusDI
+      };
     }
 
     return undefined;
   }
 
-  getResult(): number[] {
-    if (this.currentADX === undefined) {
+  getResult(): ADXOutput[] {
+    if (this.currentADX === undefined || this.currentPlusDI === undefined || this.currentMinusDI === undefined) {
       return [];
     }
-    return [this.currentADX];
+    return [{
+      adx: this.currentADX,
+      pdi: this.currentPlusDI,
+      mdi: this.currentMinusDI
+    }];
   }
 
   static calculate = adx;

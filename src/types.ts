@@ -1,9 +1,25 @@
-export interface CandleData {
+export interface ICandleData {
   open: number;
   high: number;
   low: number;
   close: number;
   volume?: number;
+}
+
+export class CandleData implements ICandleData {
+  public open: number;
+  public high: number;
+  public low: number;
+  public close: number;
+  public volume?: number;
+
+  constructor(open: number, high: number, low: number, close: number, volume?: number) {
+    this.open = open;
+    this.high = high;
+    this.low = low;
+    this.close = close;
+    this.volume = volume;
+  }
 }
 
 export interface IndicatorInput {

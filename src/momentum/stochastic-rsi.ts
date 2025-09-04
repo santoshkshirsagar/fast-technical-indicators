@@ -11,7 +11,7 @@ export interface StochasticRSIInput extends IndicatorInput {
 }
 
 export interface StochasticRSIOutput {
-  stochrsi?: number;
+  stochRSI?: number;
   k?: number;
   d?: number;
 }
@@ -68,7 +68,7 @@ export function stochasticrsi(input: StochasticRSIInput): StochasticRSIOutput[] 
       ? dValues[i - kPeriod - dPeriod + 2] : undefined;
     
     result.push({
-      stochrsi: stochRSIValues[i],
+      stochRSI: stochRSIValues[i],
       k: kValue,
       d: dValue
     });
@@ -205,7 +205,7 @@ export class StochasticRSI {
     const dValue = kValue !== undefined ? this.dCalculator.nextValue(kValue) : undefined;
     
     return {
-      stochrsi: stochRSI,
+      stochRSI: stochRSI,
       k: kValue,
       d: dValue
     };
@@ -225,7 +225,7 @@ export class StochasticRSI {
       : undefined;
     
     return [{
-      stochrsi: lastStochRSI,
+      stochRSI: lastStochRSI,
       k: kResult,
       d: dResult
     }];

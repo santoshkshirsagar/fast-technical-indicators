@@ -1,4 +1,4 @@
-import { adx, ADX } from '../src/directional-movement/adx';
+import { adx, ADX, ADXOutput } from '../src/directional-movement/adx';
 import { adx as referenceADX } from 'technicalindicators';
 
 describe('ADX (Average Directional Index)', () => {
@@ -18,22 +18,33 @@ describe('ADX (Average Directional Index)', () => {
       close: testData.close 
     });
     
-    // ADX should return array of numbers
+    // ADX should return array of ADXOutput objects
     expect(Array.isArray(ourResult)).toBe(true);
     
     if (ourResult.length > 0) {
-      // ADX values should be between 0 and 100
+      // ADX values should be between 0 and 100 and have proper structure
       ourResult.forEach(value => {
-        expect(typeof value).toBe('number');
-        expect(value).toBeGreaterThanOrEqual(0);
-        expect(value).toBeLessThanOrEqual(100);
+        expect(typeof value).toBe('object');
+        expect(value).toHaveProperty('adx');
+        expect(value).toHaveProperty('pdi');
+        expect(value).toHaveProperty('mdi');
+        if (value.adx !== undefined) {
+          expect(value.adx).toBeGreaterThanOrEqual(0);
+          expect(value.adx).toBeLessThanOrEqual(100);
+        }
+        if (value.pdi !== undefined) {
+          expect(value.pdi).toBeGreaterThanOrEqual(0);
+        }
+        if (value.mdi !== undefined) {
+          expect(value.mdi).toBeGreaterThanOrEqual(0);
+        }
       });
     }
   });
 
   test('class-based ADX should work correctly', () => {
     const ourADX = new ADX({ period, high: [], low: [], close: [] });
-    let streamResults: number[] = [];
+    let streamResults: ADXOutput[] = [];
     
     for (let i = 0; i < testData.high.length; i++) {
       const result = ourADX.nextValue(testData.high[i], testData.low[i], testData.close[i]);
@@ -44,10 +55,22 @@ describe('ADX (Average Directional Index)', () => {
     
     expect(streamResults.length).toBeGreaterThan(0);
     
-    // Check that ADX values are within expected range (0-100)
+    // Check that ADX values are within expected range and have proper structure
     streamResults.forEach(result => {
-      expect(result).toBeGreaterThanOrEqual(0);
-      expect(result).toBeLessThanOrEqual(100);
+      expect(typeof result).toBe('object');
+      expect(result).toHaveProperty('adx');
+      expect(result).toHaveProperty('pdi');
+      expect(result).toHaveProperty('mdi');
+      if (result.adx !== undefined) {
+        expect(result.adx).toBeGreaterThanOrEqual(0);
+        expect(result.adx).toBeLessThanOrEqual(100);
+      }
+      if (result.pdi !== undefined) {
+        expect(result.pdi).toBeGreaterThanOrEqual(0);
+      }
+      if (result.mdi !== undefined) {
+        expect(result.mdi).toBeGreaterThanOrEqual(0);
+      }
     });
   });
 

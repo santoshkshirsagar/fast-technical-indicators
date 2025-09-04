@@ -142,9 +142,17 @@ export { StockData } from './stock-data';
 // Configuration
 export { setConfig, getConfig, getPrecision, getEpsilon, formatValue, isEqual } from './config';
 
+// Available Indicators utility
+export { getAvailableIndicators, AvailableIndicators } from './utils/available-indicators';
+
 // Backward compatibility exports
 export { CandleData } from './types';
 
 // Functional aliases for backward compatibility
 export { averageGain as averagegain } from './utils/index';
 export { averageLoss as averageloss } from './utils/index';
+
+// API compatibility aliases for technicalindicators package
+export { keltnerchannel as keltnerchannels } from './volatility/keltner-channels';
+export { ichimokukinkouhyou as ichimokucloud } from './trend/ichimoku';
+export { fibonacci as fibonacciretracement } from './drawing-tools/fibonacci';

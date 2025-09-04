@@ -32,6 +32,7 @@ describe('Stochastic RSI', () => {
     for (let i = 0; i < ourResult.length; i++) {
       expect(ourResult[i].k).toBeCloseTo(referenceResult[i].k, 4);
       expect(ourResult[i].d).toBeCloseTo(referenceResult[i].d, 4);
+      expect(ourResult[i].stochRSI).toBeCloseTo(referenceResult[i].stochRSI, 4);
     }
   });
 
@@ -65,6 +66,7 @@ describe('Stochastic RSI', () => {
     for (let i = 0; i < streamResults.length; i++) {
       expect(streamResults[i].k).toBeCloseTo(referenceResult[i].k, 4);
       expect(streamResults[i].d).toBeCloseTo(referenceResult[i].d, 4);
+      expect(streamResults[i].stochRSI).toBeCloseTo(referenceResult[i].stochRSI, 4);
     }
   });
 
