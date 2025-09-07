@@ -1,21 +1,54 @@
 import { adx, ADX, ADXOutput } from '../src/directional-movement/adx';
 import { adx as referenceADX } from 'technicalindicators';
+import testDataRaw from './data.json';
 
 describe('ADX (Average Directional Index)', () => {
-  const testData = {
-    high: [48.70, 48.72, 48.90, 48.87, 48.82, 49.05, 49.20, 49.35, 49.92, 50.19, 50.12, 49.66, 49.88, 50.19, 50.36, 50.57, 50.65, 50.43, 49.63, 49.88, 50.19, 50.36, 50.57, 50.65, 50.43, 49.63, 49.88, 50.19, 50.36],
-    low: [47.79, 48.14, 48.39, 48.37, 48.24, 48.64, 48.94, 48.86, 49.50, 49.87, 49.20, 48.90, 49.43, 49.73, 49.26, 50.09, 50.30, 49.21, 48.98, 49.50, 49.87, 49.20, 50.09, 50.30, 49.21, 48.98, 49.50, 49.87, 49.20],
-    close: [48.16, 48.61, 48.75, 48.63, 48.74, 49.03, 49.07, 49.32, 49.91, 50.13, 49.53, 49.50, 49.75, 50.03, 50.31, 50.52, 50.41, 49.34, 49.37, 49.68, 50.13, 49.53, 50.52, 50.41, 49.34, 49.37, 49.68, 50.13, 49.53]
+  // Use all data points from data.json for testing
+  const testDataArray = Array.isArray(testDataRaw) ? testDataRaw : [testDataRaw];
+  const adxTestData = {
+    high: testDataArray.map(d => d.high),
+    low: testDataArray.map(d => d.low),
+    close: testDataArray.map(d => d.close)
   };
   
   const period = 14;
 
-  test('functional ADX should work correctly', () => {
+  const smallTestData = {
+    high: [48.70, 48.72, 48.90, 48.87, 48.82, 49.05, 49.20, 49.35, 49.92, 50.19, 50.12, 49.66, 49.88, 50.19, 50.36, 50.57, 50.65, 50.43, 49.63, 49.88, 50.19, 50.36, 50.57, 50.65, 50.43, 49.63, 49.88, 50.19, 50.36],
+    low: [47.79, 48.14, 48.39, 48.37, 48.24, 48.64, 48.94, 48.86, 49.50, 49.87, 49.20, 48.90, 49.43, 49.73, 49.26, 50.09, 50.30, 49.21, 48.98, 49.50, 49.87, 49.20, 50.09, 50.30, 49.21, 48.98, 49.50, 49.87, 49.20],
+    close: [48.16, 48.61, 48.75, 48.63, 48.74, 49.03, 49.07, 49.32, 49.91, 50.13, 49.53, 49.50, 49.75, 50.03, 50.31, 50.52, 50.41, 49.34, 49.37, 49.68, 50.13, 49.53, 50.52, 50.41, 49.34, 49.37, 49.68, 50.13, 49.53]
+  };
+
+  test('functional ADX should match reference implementation with real market data', () => {
     const ourResult = adx({ 
       period, 
-      high: testData.high, 
-      low: testData.low, 
-      close: testData.close 
+      high: adxTestData.high, 
+      low: adxTestData.low, 
+      close: adxTestData.close 
+    });
+    
+    const referenceResult = referenceADX({
+      period,
+      high: adxTestData.high,
+      low: adxTestData.low,
+      close: adxTestData.close
+    });
+    
+    expect(ourResult).toHaveLength(referenceResult.length);
+    
+    for (let i = 0; i < ourResult.length; i++) {
+      expect(ourResult[i].adx).toBeCloseTo(referenceResult[i].adx, 4);
+      expect(ourResult[i].pdi).toBeCloseTo(referenceResult[i].pdi, 4);
+      expect(ourResult[i].mdi).toBeCloseTo(referenceResult[i].mdi, 4);
+    }
+  });
+
+  test('functional ADX should work with small test data', () => {
+    const ourResult = adx({ 
+      period, 
+      high: smallTestData.high, 
+      low: smallTestData.low, 
+      close: smallTestData.close 
     });
     
     // ADX should return array of ADXOutput objects
@@ -42,36 +75,31 @@ describe('ADX (Average Directional Index)', () => {
     }
   });
 
-  test('class-based ADX should work correctly', () => {
+  test('class-based ADX should work correctly with streaming data', () => {
     const ourADX = new ADX({ period, high: [], low: [], close: [] });
+    const referenceResult = referenceADX({
+      period,
+      high: adxTestData.high,
+      low: adxTestData.low,
+      close: adxTestData.close
+    });
+    
     let streamResults: ADXOutput[] = [];
     
-    for (let i = 0; i < testData.high.length; i++) {
-      const result = ourADX.nextValue(testData.high[i], testData.low[i], testData.close[i]);
+    for (let i = 0; i < adxTestData.high.length; i++) {
+      const result = ourADX.nextValue(adxTestData.high[i], adxTestData.low[i], adxTestData.close[i]);
       if (result !== undefined) {
         streamResults.push(result);
       }
     }
     
-    expect(streamResults.length).toBeGreaterThan(0);
+    expect(streamResults).toHaveLength(referenceResult.length);
     
-    // Check that ADX values are within expected range and have proper structure
-    streamResults.forEach(result => {
-      expect(typeof result).toBe('object');
-      expect(result).toHaveProperty('adx');
-      expect(result).toHaveProperty('pdi');
-      expect(result).toHaveProperty('mdi');
-      if (result.adx !== undefined) {
-        expect(result.adx).toBeGreaterThanOrEqual(0);
-        expect(result.adx).toBeLessThanOrEqual(100);
-      }
-      if (result.pdi !== undefined) {
-        expect(result.pdi).toBeGreaterThanOrEqual(0);
-      }
-      if (result.mdi !== undefined) {
-        expect(result.mdi).toBeGreaterThanOrEqual(0);
-      }
-    });
+    for (let i = 0; i < streamResults.length; i++) {
+      expect(streamResults[i].adx).toBeCloseTo(referenceResult[i].adx, 4);
+      expect(streamResults[i].pdi).toBeCloseTo(referenceResult[i].pdi, 4);
+      expect(streamResults[i].mdi).toBeCloseTo(referenceResult[i].mdi, 4);
+    }
   });
 
   test('should handle edge cases', () => {
@@ -79,10 +107,10 @@ describe('ADX (Average Directional Index)', () => {
     expect(emptyResult).toEqual([]);
     
     const shortDataResult = adx({ 
-      period: 14, 
-      high: [1], 
-      low: [1], 
-      close: [1] 
+      period: adxTestData.high.length, 
+      high: adxTestData.high.slice(0, 1), 
+      low: adxTestData.low.slice(0, 1), 
+      close: adxTestData.close.slice(0, 1) 
     });
     expect(shortDataResult).toEqual([]);
   });

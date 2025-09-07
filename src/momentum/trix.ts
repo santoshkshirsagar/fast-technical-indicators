@@ -32,7 +32,7 @@ export function trix(input: TRIXInput): number[] {
     if (previousValue === 0) {
       result.push(0);
     } else {
-      const trixValue = ((currentValue - previousValue) / previousValue) * 10000;
+      const trixValue = ((currentValue - previousValue) / previousValue) * 100;
       result.push(trixValue);
     }
   }
@@ -111,7 +111,7 @@ export class TRIX {
     if (this.previousTripleEMA === 0) {
       trixValue = 0;
     } else {
-      trixValue = ((currentTripleEMA - this.previousTripleEMA!) / this.previousTripleEMA!) * 10000;
+      trixValue = ((currentTripleEMA - this.previousTripleEMA!) / this.previousTripleEMA!) * 100;
     }
     
     this.previousTripleEMA = currentTripleEMA;
@@ -131,7 +131,7 @@ export class TRIX {
     if (this.previousTripleEMA === 0) {
       trixValue = 0;
     } else {
-      trixValue = ((currentTripleEMA - this.previousTripleEMA) / this.previousTripleEMA) * 10000;
+      trixValue = ((currentTripleEMA - this.previousTripleEMA) / this.previousTripleEMA) * 100;
     }
     
     return [trixValue];

@@ -12,42 +12,71 @@ export function mfi(input: MFIInput): number[] {
   const { period = 14, high, low, close, volume } = input;
   
   if (high.length !== low.length || low.length !== close.length || 
-      close.length !== volume.length || close.length < period + 1) {
+      close.length !== volume.length) {
     return [];
   }
 
   const result: number[] = [];
   
-  // Calculate typical prices and raw money flow
-  const typicalPrices: number[] = [];
-  const rawMoneyFlow: number[] = [];
+  // Arrays to track positive and negative money flow for rolling window
+  const positiveFlows: number[] = [];
+  const negativeFlows: number[] = [];
   
-  for (let i = 0; i < close.length; i++) {
+  let prevTypicalPrice: number | null = null;
+  let calculationStarted = false;
+  
+  for (let i = 0; i < high.length; i++) {
     const typicalPrice = (high[i] + low[i] + close[i]) / 3;
-    typicalPrices.push(typicalPrice);
-    rawMoneyFlow.push(typicalPrice * volume[i]);
-  }
-  
-  for (let i = period; i < close.length; i++) {
-    let positiveMoneyFlow = 0;
-    let negativeMoneyFlow = 0;
+    const rawMoneyFlow = typicalPrice * volume[i];
     
-    for (let j = i - period + 1; j <= i; j++) {
-      if (typicalPrices[j] > typicalPrices[j - 1]) {
-        positiveMoneyFlow += rawMoneyFlow[j];
-      } else if (typicalPrices[j] < typicalPrices[j - 1]) {
-        negativeMoneyFlow += rawMoneyFlow[j];
+    if (i === 0) {
+      prevTypicalPrice = typicalPrice;
+      continue;
+    }
+    
+    let positiveMoney = 0;
+    let negativeMoney = 0;
+    
+    if (prevTypicalPrice !== null && typicalPrice !== null) {
+      if (typicalPrice > prevTypicalPrice) {
+        positiveMoney = rawMoneyFlow;
+      } else if (typicalPrice < prevTypicalPrice) {
+        negativeMoney = rawMoneyFlow;
       }
-      // If equal, no flow is added to either
+      // If equal, both remain 0
     }
     
-    if (negativeMoneyFlow === 0) {
-      result.push(100);
-    } else {
-      const moneyFlowRatio = positiveMoneyFlow / negativeMoneyFlow;
-      const mfiValue = 100 - (100 / (1 + moneyFlowRatio));
-      result.push(mfiValue);
+    positiveFlows.push(positiveMoney);
+    negativeFlows.push(negativeMoney);
+    
+    // Keep only the required period window
+    if (positiveFlows.length > period) {
+      positiveFlows.shift();
+      negativeFlows.shift();
     }
+    
+    // Calculate MFI when we have enough data, but skip the first calculation
+    if (positiveFlows.length === period) {
+      if (!calculationStarted) {
+        calculationStarted = true;
+      } else {
+        const positiveFlowSum = positiveFlows.reduce((sum, flow) => sum + flow, 0);
+        const negativeFlowSum = negativeFlows.reduce((sum, flow) => sum + flow, 0);
+        
+        let mfiValue: number;
+        if (negativeFlowSum === 0) {
+          mfiValue = 100;
+        } else {
+          const moneyFlowRatio = positiveFlowSum / negativeFlowSum;
+          mfiValue = 100 - (100 / (1 + moneyFlowRatio));
+        }
+        
+        // Round to 2 decimal places like the reference implementation
+        result.push(parseFloat(mfiValue.toFixed(2)));
+      }
+    }
+    
+    prevTypicalPrice = typicalPrice;
   }
   
   return result;
@@ -55,82 +84,78 @@ export function mfi(input: MFIInput): number[] {
 
 export class MFI {
   private period: number;
-  private highValues: number[] = [];
-  private lowValues: number[] = [];
-  private closeValues: number[] = [];
-  private volumeValues: number[] = [];
-  private typicalPrices: number[] = [];
-  private rawMoneyFlow: number[] = [];
+  private positiveFlows: number[] = [];
+  private negativeFlows: number[] = [];
+  private prevTypicalPrice: number | null = null;
+  private results: number[] = [];
+  private skipFirst: boolean = true;
+  private firstMFICalculated: boolean = false;
 
   constructor(input: MFIInput) {
     this.period = input.period || 14;
   }
 
   nextValue(high: number, low: number, close: number, volume: number): NumberOrUndefined {
-    this.highValues.push(high);
-    this.lowValues.push(low);
-    this.closeValues.push(close);
-    this.volumeValues.push(volume);
-
     const typicalPrice = (high + low + close) / 3;
-    this.typicalPrices.push(typicalPrice);
-    this.rawMoneyFlow.push(typicalPrice * volume);
-
-    // Keep only required data
-    if (this.typicalPrices.length > this.period + 1) {
-      this.highValues.shift();
-      this.lowValues.shift();
-      this.closeValues.shift();
-      this.volumeValues.shift();
-      this.typicalPrices.shift();
-      this.rawMoneyFlow.shift();
-    }
-
-    if (this.typicalPrices.length < this.period + 1) {
+    const rawMoneyFlow = typicalPrice * volume;
+    
+    if (this.skipFirst) {
+      this.prevTypicalPrice = typicalPrice;
+      this.skipFirst = false;
       return undefined;
     }
-
-    let positiveMoneyFlow = 0;
-    let negativeMoneyFlow = 0;
     
-    for (let i = 1; i < this.typicalPrices.length; i++) {
-      if (this.typicalPrices[i] > this.typicalPrices[i - 1]) {
-        positiveMoneyFlow += this.rawMoneyFlow[i];
-      } else if (this.typicalPrices[i] < this.typicalPrices[i - 1]) {
-        negativeMoneyFlow += this.rawMoneyFlow[i];
+    let positiveMoney = 0;
+    let negativeMoney = 0;
+    
+    if (this.prevTypicalPrice !== null && typicalPrice !== null) {
+      if (typicalPrice > this.prevTypicalPrice) {
+        positiveMoney = rawMoneyFlow;
+      } else if (typicalPrice < this.prevTypicalPrice) {
+        negativeMoney = rawMoneyFlow;
       }
     }
-
-    if (negativeMoneyFlow === 0) {
-      return 100;
+    
+    this.positiveFlows.push(positiveMoney);
+    this.negativeFlows.push(negativeMoney);
+    
+    // Keep only the required period window
+    if (this.positiveFlows.length > this.period) {
+      this.positiveFlows.shift();
+      this.negativeFlows.shift();
     }
-
-    const moneyFlowRatio = positiveMoneyFlow / negativeMoneyFlow;
-    return 100 - (100 / (1 + moneyFlowRatio));
+    
+    // Calculate MFI when we have enough data
+    if (this.positiveFlows.length >= this.period) {
+      // Skip the first MFI calculation to match reference implementation
+      if (!this.firstMFICalculated) {
+        this.firstMFICalculated = true;
+      } else {
+        const positiveFlowSum = this.positiveFlows.reduce((sum, flow) => sum + flow, 0);
+        const negativeFlowSum = this.negativeFlows.reduce((sum, flow) => sum + flow, 0);
+        
+        let mfiValue: number;
+        if (negativeFlowSum === 0) {
+          mfiValue = 100;
+        } else {
+          const moneyFlowRatio = positiveFlowSum / negativeFlowSum;
+          mfiValue = 100 - (100 / (1 + moneyFlowRatio));
+        }
+        
+        // Round to 2 decimal places like the reference implementation
+        const result = parseFloat(mfiValue.toFixed(2));
+        this.results.push(result);
+        this.prevTypicalPrice = typicalPrice;
+        return result;
+      }
+    }
+    
+    this.prevTypicalPrice = typicalPrice;
+    return undefined;
   }
 
   getResult(): number[] {
-    if (this.typicalPrices.length < this.period + 1) {
-      return [];
-    }
-
-    let positiveMoneyFlow = 0;
-    let negativeMoneyFlow = 0;
-    
-    for (let i = 1; i < this.typicalPrices.length; i++) {
-      if (this.typicalPrices[i] > this.typicalPrices[i - 1]) {
-        positiveMoneyFlow += this.rawMoneyFlow[i];
-      } else if (this.typicalPrices[i] < this.typicalPrices[i - 1]) {
-        negativeMoneyFlow += this.rawMoneyFlow[i];
-      }
-    }
-
-    if (negativeMoneyFlow === 0) {
-      return [100];
-    }
-
-    const moneyFlowRatio = positiveMoneyFlow / negativeMoneyFlow;
-    return [100 - (100 / (1 + moneyFlowRatio))];
+    return this.results;
   }
 
   static calculate = mfi;

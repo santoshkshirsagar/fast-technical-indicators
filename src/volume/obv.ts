@@ -13,8 +13,7 @@ export function obv(input: OBVInput): number[] {
   }
 
   const result: number[] = [];
-  let cumulativeVolume = volume[0]; // Start with first volume (correct approach)
-  result.push(cumulativeVolume);
+  let cumulativeVolume = 0; // Start with 0
   
   for (let i = 1; i < close.length; i++) {
     if (close[i] > close[i - 1]) {
@@ -51,9 +50,9 @@ export class OBV {
     this.volumeValues.push(volume);
 
     if (!this.initialized) {
-      this.cumulativeVolume = volume; // Start with first volume (correct)
+      this.cumulativeVolume = 0; // Start with 0
       this.initialized = true;
-      return this.cumulativeVolume;
+      return undefined; // Don't return value for first data point
     }
 
     const previousClose = this.closeValues[this.closeValues.length - 2];

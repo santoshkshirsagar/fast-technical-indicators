@@ -38,50 +38,100 @@ export function kst(input: KSTInput): KSTOutput[] {
     return [];
   }
 
-  // Calculate ROC for each period
-  const roc1 = roc({ values, period: ROCPer1 });
-  const roc2 = roc({ values, period: ROCPer2 });
-  const roc3 = roc({ values, period: ROCPer3 });
-  const roc4 = roc({ values, period: ROCPer4 });
-
-  // Calculate SMA of each ROC
-  const smaRoc1 = sma({ values: roc1, period: SMAROCPer1 });
-  const smaRoc2 = sma({ values: roc2, period: SMAROCPer2 });
-  const smaRoc3 = sma({ values: roc3, period: SMAROCPer3 });
-  const smaRoc4 = sma({ values: roc4, period: SMAROCPer4 });
-
-  // Find the minimum length to align all arrays
-  const minLength = Math.min(smaRoc1.length, smaRoc2.length, smaRoc3.length, smaRoc4.length);
+  const result: KSTOutput[] = [];
   
-  if (minLength === 0) {
+  // Calculate minimum required data points for first result
+  const firstResult = Math.max(ROCPer1 + SMAROCPer1, ROCPer2 + SMAROCPer2, ROCPer3 + SMAROCPer3, ROCPer4 + SMAROCPer4);
+  
+  if (values.length < firstResult) {
     return [];
   }
 
-  // Calculate KST values
-  const kstValues: number[] = [];
-  for (let i = 0; i < minLength; i++) {
-    const kstValue = (smaRoc1[i] * 1) + (smaRoc2[i] * 2) + (smaRoc3[i] * 3) + (smaRoc4[i] * 4);
-    kstValues.push(kstValue);
-  }
-
-  // Calculate signal line (SMA of KST)
-  const signalValues = sma({ values: kstValues, period: signalPeriod });
-
-  // Create output array
-  const result: KSTOutput[] = [];
+  // Arrays to store ROC values for SMA calculation
+  const roc1Values: number[] = [];
+  const roc2Values: number[] = [];
+  const roc3Values: number[] = [];
+  const roc4Values: number[] = [];
   
-  // Add entries without signal first
-  for (let i = 0; i < kstValues.length - signalValues.length; i++) {
-    result.push({ kst: kstValues[i] });
-  }
+  // Arrays to store SMA values for each ROC
+  let sma1Values: number[] = [];
+  let sma2Values: number[] = [];
+  let sma3Values: number[] = [];
+  let sma4Values: number[] = [];
+  
+  // KST values for signal calculation
+  const kstValues: number[] = [];
 
-  // Add entries with both KST and signal
-  for (let i = 0; i < signalValues.length; i++) {
-    const kstIndex = kstValues.length - signalValues.length + i;
-    result.push({
-      kst: kstValues[kstIndex],
-      signal: signalValues[i]
-    });
+  for (let i = 0; i < values.length; i++) {
+    // Calculate ROC values
+    let roc1Value: number | undefined;
+    let roc2Value: number | undefined;
+    let roc3Value: number | undefined;
+    let roc4Value: number | undefined;
+
+    if (i >= ROCPer1) {
+      roc1Value = ((values[i] - values[i - ROCPer1]) / values[i - ROCPer1]) * 100;
+      roc1Values.push(roc1Value);
+    }
+
+    if (i >= ROCPer2) {
+      roc2Value = ((values[i] - values[i - ROCPer2]) / values[i - ROCPer2]) * 100;
+      roc2Values.push(roc2Value);
+    }
+
+    if (i >= ROCPer3) {
+      roc3Value = ((values[i] - values[i - ROCPer3]) / values[i - ROCPer3]) * 100;
+      roc3Values.push(roc3Value);
+    }
+
+    if (i >= ROCPer4) {
+      roc4Value = ((values[i] - values[i - ROCPer4]) / values[i - ROCPer4]) * 100;
+      roc4Values.push(roc4Value);
+    }
+
+    // Calculate SMA values
+    let rcma1: number | undefined;
+    let rcma2: number | undefined;
+    let rcma3: number | undefined;
+    let rcma4: number | undefined;
+
+    if (roc1Values.length >= SMAROCPer1) {
+      const sma1Sum = roc1Values.slice(-SMAROCPer1).reduce((sum, val) => sum + val, 0);
+      rcma1 = sma1Sum / SMAROCPer1;
+    }
+
+    if (roc2Values.length >= SMAROCPer2) {
+      const sma2Sum = roc2Values.slice(-SMAROCPer2).reduce((sum, val) => sum + val, 0);
+      rcma2 = sma2Sum / SMAROCPer2;
+    }
+
+    if (roc3Values.length >= SMAROCPer3) {
+      const sma3Sum = roc3Values.slice(-SMAROCPer3).reduce((sum, val) => sum + val, 0);
+      rcma3 = sma3Sum / SMAROCPer3;
+    }
+
+    if (roc4Values.length >= SMAROCPer4) {
+      const sma4Sum = roc4Values.slice(-SMAROCPer4).reduce((sum, val) => sum + val, 0);
+      rcma4 = sma4Sum / SMAROCPer4;
+    }
+
+    // Calculate KST if we have all components
+    if (i >= firstResult - 1 && rcma1 !== undefined && rcma2 !== undefined && rcma3 !== undefined && rcma4 !== undefined) {
+      const kstValue = (rcma1 * 1) + (rcma2 * 2) + (rcma3 * 3) + (rcma4 * 4);
+      kstValues.push(kstValue);
+
+      // Calculate signal (SMA of KST)
+      let signalValue: number | undefined;
+      if (kstValues.length >= signalPeriod) {
+        const signalSum = kstValues.slice(-signalPeriod).reduce((sum, val) => sum + val, 0);
+        signalValue = signalSum / signalPeriod;
+      }
+
+      result.push({
+        kst: kstValue,
+        signal: signalValue
+      });
+    }
   }
 
   return result;
@@ -98,7 +148,17 @@ export class KST {
   private SMAROCPer4: number;
   private signalPeriod: number;
   private values: number[] = [];
+  private firstResult: number;
+  
+  // Arrays to store ROC values for SMA calculation
+  private roc1Values: number[] = [];
+  private roc2Values: number[] = [];
+  private roc3Values: number[] = [];
+  private roc4Values: number[] = [];
+  
+  // KST values for signal calculation
   private kstValues: number[] = [];
+  private results: KSTOutput[] = [];
 
   constructor(input: KSTInput) {
     this.ROCPer1 = input.ROCPer1 || 10;
@@ -111,6 +171,13 @@ export class KST {
     this.SMAROCPer4 = input.SMAROCPer4 || 15;
     this.signalPeriod = input.signalPeriod || 9;
 
+    this.firstResult = Math.max(
+      this.ROCPer1 + this.SMAROCPer1,
+      this.ROCPer2 + this.SMAROCPer2,
+      this.ROCPer3 + this.SMAROCPer3,
+      this.ROCPer4 + this.SMAROCPer4
+    );
+
     if (input.values && input.values.length) {
       input.values.forEach(value => this.nextValue(value));
     }
@@ -118,40 +185,81 @@ export class KST {
 
   nextValue(value: number): KSTOutput | undefined {
     this.values.push(value);
+    const i = this.values.length - 1;
 
-    const result = kst({
-      values: this.values,
-      ROCPer1: this.ROCPer1,
-      ROCPer2: this.ROCPer2,
-      ROCPer3: this.ROCPer3,
-      ROCPer4: this.ROCPer4,
-      SMAROCPer1: this.SMAROCPer1,
-      SMAROCPer2: this.SMAROCPer2,
-      SMAROCPer3: this.SMAROCPer3,
-      SMAROCPer4: this.SMAROCPer4,
-      signalPeriod: this.signalPeriod
-    });
+    // Calculate ROC values
+    if (i >= this.ROCPer1) {
+      const roc1Value = ((value - this.values[i - this.ROCPer1]) / this.values[i - this.ROCPer1]) * 100;
+      this.roc1Values.push(roc1Value);
+    }
 
-    if (result.length > 0) {
-      return result[result.length - 1];
+    if (i >= this.ROCPer2) {
+      const roc2Value = ((value - this.values[i - this.ROCPer2]) / this.values[i - this.ROCPer2]) * 100;
+      this.roc2Values.push(roc2Value);
+    }
+
+    if (i >= this.ROCPer3) {
+      const roc3Value = ((value - this.values[i - this.ROCPer3]) / this.values[i - this.ROCPer3]) * 100;
+      this.roc3Values.push(roc3Value);
+    }
+
+    if (i >= this.ROCPer4) {
+      const roc4Value = ((value - this.values[i - this.ROCPer4]) / this.values[i - this.ROCPer4]) * 100;
+      this.roc4Values.push(roc4Value);
+    }
+
+    // Calculate SMA values
+    let rcma1: number | undefined;
+    let rcma2: number | undefined;
+    let rcma3: number | undefined;
+    let rcma4: number | undefined;
+
+    if (this.roc1Values.length >= this.SMAROCPer1) {
+      const sma1Sum = this.roc1Values.slice(-this.SMAROCPer1).reduce((sum, val) => sum + val, 0);
+      rcma1 = sma1Sum / this.SMAROCPer1;
+    }
+
+    if (this.roc2Values.length >= this.SMAROCPer2) {
+      const sma2Sum = this.roc2Values.slice(-this.SMAROCPer2).reduce((sum, val) => sum + val, 0);
+      rcma2 = sma2Sum / this.SMAROCPer2;
+    }
+
+    if (this.roc3Values.length >= this.SMAROCPer3) {
+      const sma3Sum = this.roc3Values.slice(-this.SMAROCPer3).reduce((sum, val) => sum + val, 0);
+      rcma3 = sma3Sum / this.SMAROCPer3;
+    }
+
+    if (this.roc4Values.length >= this.SMAROCPer4) {
+      const sma4Sum = this.roc4Values.slice(-this.SMAROCPer4).reduce((sum, val) => sum + val, 0);
+      rcma4 = sma4Sum / this.SMAROCPer4;
+    }
+
+    // Calculate KST if we have all components
+    if (i >= this.firstResult - 1 && rcma1 !== undefined && rcma2 !== undefined && rcma3 !== undefined && rcma4 !== undefined) {
+      const kstValue = (rcma1 * 1) + (rcma2 * 2) + (rcma3 * 3) + (rcma4 * 4);
+      this.kstValues.push(kstValue);
+
+      // Calculate signal (SMA of KST)
+      let signalValue: number | undefined;
+      if (this.kstValues.length >= this.signalPeriod) {
+        const signalSum = this.kstValues.slice(-this.signalPeriod).reduce((sum, val) => sum + val, 0);
+        signalValue = signalSum / this.signalPeriod;
+      }
+
+      const result = {
+        kst: kstValue,
+        signal: signalValue
+      };
+
+      this.results.push(result);
+      return result;
     }
 
     return undefined;
   }
 
   getResult(): KSTOutput[] {
-    return kst({
-      values: this.values,
-      ROCPer1: this.ROCPer1,
-      ROCPer2: this.ROCPer2,
-      ROCPer3: this.ROCPer3,
-      ROCPer4: this.ROCPer4,
-      SMAROCPer1: this.SMAROCPer1,
-      SMAROCPer2: this.SMAROCPer2,
-      SMAROCPer3: this.SMAROCPer3,
-      SMAROCPer4: this.SMAROCPer4,
-      signalPeriod: this.signalPeriod
-    });
+    return this.results;
   }
 
   static calculate = kst;

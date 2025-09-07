@@ -24,7 +24,7 @@ export function rsi(input: RSIInput): number[] {
   
   // Calculate first RSI
   let rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-  result.push(100 - (100 / (1 + rs)));
+  result.push(parseFloat((100 - (100 / (1 + rs))).toFixed(2)));
   
   // Calculate subsequent RSI using Wilder's smoothing
   for (let i = period; i < gains.length; i++) {
@@ -32,7 +32,7 @@ export function rsi(input: RSIInput): number[] {
     avgLoss = ((avgLoss * (period - 1)) + losses[i]) / period;
     
     rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-    result.push(100 - (100 / (1 + rs)));
+    result.push(parseFloat((100 - (100 / (1 + rs))).toFixed(2)));
   }
   
   return result;
@@ -79,7 +79,7 @@ export class RSI {
         this.initialized = true;
         
         const rs = this.avgLoss === 0 ? 100 : this.avgGain / this.avgLoss;
-        return 100 - (100 / (1 + rs));
+        return parseFloat((100 - (100 / (1 + rs))).toFixed(2));
       }
       return undefined;
     }
@@ -89,7 +89,7 @@ export class RSI {
     this.avgLoss = ((this.avgLoss * (this.period - 1)) + loss) / this.period;
 
     const rs = this.avgLoss === 0 ? 100 : this.avgGain / this.avgLoss;
-    return 100 - (100 / (1 + rs));
+    return parseFloat((100 - (100 / (1 + rs))).toFixed(2));
   }
 
   getResult(): number[] {
@@ -98,7 +98,7 @@ export class RSI {
     }
     
     const rs = this.avgLoss === 0 ? 100 : this.avgGain / this.avgLoss;
-    return [100 - (100 / (1 + rs))];
+    return [parseFloat((100 - (100 / (1 + rs))).toFixed(2))];
   }
 
   static calculate = rsi;

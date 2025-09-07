@@ -23,20 +23,16 @@ export function adl(input: ADLInput): number[] {
     const c = close[i];
     const v = volume[i];
     
-    // Calculate Money Flow Multiplier
-    let moneyFlowMultiplier: number;
-    if (h === l) {
-      moneyFlowMultiplier = 0; // Avoid division by zero
-    } else {
-      moneyFlowMultiplier = ((c - l) - (h - c)) / (h - l);
-    }
+    // Calculate Money Flow Multiplier (exact reference implementation)
+    let moneyFlowMultiplier = ((c - l) - (h - c)) / (h - l);
+    moneyFlowMultiplier = isNaN(moneyFlowMultiplier) ? 1 : moneyFlowMultiplier;
     
-    // Calculate Money Flow Volume
+    // Calculate Money Flow Volume  
     const moneyFlowVolume = moneyFlowMultiplier * v;
     
-    // Add to cumulative ADL
+    // Add to cumulative ADL (don't round internal state, only output)
     cumulativeADL += moneyFlowVolume;
-    result.push(cumulativeADL);
+    result.push(Math.round(cumulativeADL));
   }
   
   return result;
@@ -55,24 +51,20 @@ export class ADL {
   }
 
   nextValue(high: number, low: number, close: number, volume: number): NumberOrUndefined {
-    // Calculate Money Flow Multiplier
-    let moneyFlowMultiplier: number;
-    if (high === low) {
-      moneyFlowMultiplier = 0; // Avoid division by zero
-    } else {
-      moneyFlowMultiplier = ((close - low) - (high - close)) / (high - low);
-    }
+    // Calculate Money Flow Multiplier (exact reference implementation)
+    let moneyFlowMultiplier = ((close - low) - (high - close)) / (high - low);
+    moneyFlowMultiplier = isNaN(moneyFlowMultiplier) ? 1 : moneyFlowMultiplier;
     
     // Calculate Money Flow Volume
     const moneyFlowVolume = moneyFlowMultiplier * volume;
     
-    // Add to cumulative ADL
+    // Add to cumulative ADL (don't round internal state, only output)
     this.cumulativeADL += moneyFlowVolume;
-    return this.cumulativeADL;
+    return Math.round(this.cumulativeADL);
   }
 
   getResult(): number[] {
-    return [this.cumulativeADL];
+    return [Math.round(this.cumulativeADL)];
   }
 
   static calculate = adl;

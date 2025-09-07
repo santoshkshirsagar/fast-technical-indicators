@@ -1,13 +1,30 @@
 import { rsi, RSI } from '../src/oscillators/rsi';
 import { rsi as referenceRSI } from 'technicalindicators';
+import testDataRaw from './data.json';
 
 describe('RSI (Relative Strength Index)', () => {
-  const testData = [44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45.85, 46.08, 45.89, 46.03, 46.83, 47.69, 46.49, 46.26, 47.09, 46.66, 46.80, 46.23, 46.38, 46.33, 46.55, 45.88, 47.82, 47.23, 46.08, 43.67, 46.64, 46.67, 45.83, 45.38, 44.17];
+  // Use all data points from data.json for testing
+  const testDataArray = Array.isArray(testDataRaw) ? testDataRaw : [testDataRaw];
+  const testData = testDataArray.map(d => d.close);
   const period = 14;
 
-  test('functional RSI should match reference implementation', () => {
+  const smallTestData = [44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45.85, 46.08, 45.89, 46.03, 46.83, 47.69, 46.49, 46.26, 47.09, 46.66, 46.80, 46.23, 46.38, 46.33, 46.55, 45.88, 47.82, 47.23, 46.08, 43.67, 46.64, 46.67, 45.83, 45.38, 44.17];
+
+  test('functional RSI should match reference implementation with real market data', () => {
     const ourResult = rsi({ period, values: testData });
     const referenceResult = referenceRSI({ period, values: testData });
+    
+    expect(ourResult).toHaveLength(referenceResult.length);
+    expect(ourResult).toHaveLength(testDataArray.length - period);
+    
+    for (let i = 0; i < ourResult.length; i++) {
+      expect(ourResult[i]).toBeCloseTo(referenceResult[i], 2);
+    }
+  });
+
+  test('functional RSI should work with small test data', () => {
+    const ourResult = rsi({ period, values: smallTestData });
+    const referenceResult = referenceRSI({ period, values: smallTestData });
     
     expect(ourResult).toHaveLength(referenceResult.length);
     
@@ -16,15 +33,7 @@ describe('RSI (Relative Strength Index)', () => {
     }
   });
 
-  test('class-based RSI should match reference implementation', () => {
-    const ourRSI = new RSI({ period, values: testData });
-    const referenceResult = referenceRSI({ period, values: testData });
-    
-    expect(ourRSI.getResult()).toHaveLength(1);
-    expect(ourRSI.getResult()[0]).toBeCloseTo(referenceResult[referenceResult.length - 1], 1);
-  });
-
-  test('streaming RSI should work correctly', () => {
+  test('class-based RSI should work correctly with streaming data', () => {
     const ourRSI = new RSI({ period, values: [] });
     const referenceResult = referenceRSI({ period, values: testData });
     
@@ -40,7 +49,7 @@ describe('RSI (Relative Strength Index)', () => {
     expect(streamResults).toHaveLength(referenceResult.length);
     
     for (let i = 0; i < streamResults.length; i++) {
-      expect(streamResults[i]).toBeCloseTo(referenceResult[i], 1);
+      expect(streamResults[i]).toBeCloseTo(referenceResult[i], 2);
     }
   });
 

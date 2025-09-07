@@ -10,80 +10,58 @@ export interface PSARInput extends IndicatorInput {
 export function psar(input: PSARInput): number[] {
   const { high, low, step = 0.02, max = 0.2 } = input;
   
-  if (high.length !== low.length || high.length < 2) {
+  if (high.length !== low.length || high.length < 1) {
     return [];
   }
 
   const result: number[] = [];
-  let currentSAR: number;
-  let extremePoint: number;
-  let accelerationFactor = step;
-  let isUptrend: boolean;
+  let curr: {high: number, low: number} | undefined;
+  let extreme: number | undefined;
+  let sar: number | undefined;
+  let furthest: {high: number, low: number} | undefined;
+  let up = true;
+  let accel = step;
+  let prev: {high: number, low: number} | undefined;
 
-  // Initialize
-  if (high[1] > high[0]) {
-    // Start with uptrend
-    isUptrend = true;
-    currentSAR = low[0];
-    extremePoint = high[1];
-  } else {
-    // Start with downtrend
-    isUptrend = false;
-    currentSAR = high[0];
-    extremePoint = low[1];
-  }
+  // Process each period
+  for (let i = 0; i < high.length; i++) {
+    curr = { high: high[i], low: low[i] };
 
-  result.push(currentSAR);
-
-  for (let i = 1; i < high.length; i++) {
-    const currentHigh = high[i];
-    const currentLow = low[i];
-    const prevHigh = i > 0 ? high[i - 1] : currentHigh;
-    const prevLow = i > 0 ? low[i - 1] : currentLow;
-
-    // Calculate new SAR
-    let newSAR = currentSAR + accelerationFactor * (extremePoint - currentSAR);
-
-    if (isUptrend) {
-      // Uptrend rules
-      if (currentLow <= newSAR) {
-        // Trend reversal
-        isUptrend = false;
-        newSAR = extremePoint;
-        extremePoint = currentLow;
-        accelerationFactor = step;
-      } else {
-        // Continue uptrend
-        if (currentHigh > extremePoint) {
-          extremePoint = currentHigh;
-          accelerationFactor = Math.min(accelerationFactor + step, max);
+    if (prev && curr && sar !== undefined && extreme !== undefined && furthest !== undefined) {
+      sar = sar + accel * (extreme - sar);
+      
+      if (up) {
+        sar = Math.min(sar, furthest.low, prev.low);
+        if (curr.high > extreme) {
+          extreme = curr.high;
+          accel = Math.min(accel + step, max);
         }
-        
-        // SAR should not be above previous low or current low
-        newSAR = Math.min(newSAR, prevLow, currentLow);
+      } else {
+        sar = Math.max(sar, furthest.high, prev.high);
+        if (curr.low < extreme) {
+          extreme = curr.low;
+          accel = Math.min(accel + step, max);
+        }
+      }
+      
+      if ((up && curr.low < sar) || (!up && curr.high > sar)) {
+        accel = step;
+        sar = extreme;
+        up = !up;
+        extreme = !up ? curr.low : curr.high;
       }
     } else {
-      // Downtrend rules
-      if (currentHigh >= newSAR) {
-        // Trend reversal
-        isUptrend = true;
-        newSAR = extremePoint;
-        extremePoint = currentHigh;
-        accelerationFactor = step;
-      } else {
-        // Continue downtrend
-        if (currentLow < extremePoint) {
-          extremePoint = currentLow;
-          accelerationFactor = Math.min(accelerationFactor + step, max);
-        }
-        
-        // SAR should not be below previous high or current high
-        newSAR = Math.max(newSAR, prevHigh, currentHigh);
-      }
+      // Initialize on first data point
+      sar = curr.low;
+      extreme = curr.high;
     }
 
-    currentSAR = newSAR;
-    result.push(currentSAR);
+    furthest = prev || curr;
+    if (curr) {
+      prev = curr;
+    }
+    
+    result.push(sar!);
   }
 
   return result;
@@ -92,94 +70,66 @@ export function psar(input: PSARInput): number[] {
 export class PSAR {
   private step: number;
   private max: number;
-  private highValues: number[] = [];
-  private lowValues: number[] = [];
-  private currentSAR: number | undefined;
-  private extremePoint: number | undefined;
-  private accelerationFactor: number;
-  private isUptrend: boolean | undefined;
-  private initialized: boolean = false;
+  private curr: {high: number, low: number} | undefined;
+  private extreme: number | undefined;
+  private sar: number | undefined;
+  private furthest: {high: number, low: number} | undefined;
+  private up: boolean = true;
+  private accel: number;
+  private prev: {high: number, low: number} | undefined;
+  private results: number[] = [];
 
   constructor(input: PSARInput) {
     this.step = input.step || 0.02;
     this.max = input.max || 0.2;
-    this.accelerationFactor = this.step;
+    this.accel = this.step;
   }
 
   nextValue(high: number, low: number): NumberOrUndefined {
-    this.highValues.push(high);
-    this.lowValues.push(low);
+    this.curr = { high, low };
 
-    if (this.highValues.length < 2) {
-      return undefined;
-    }
-
-    if (!this.initialized) {
-      // Initialize based on first two values
-      const prevHigh = this.highValues[0];
-      const prevLow = this.lowValues[0];
-      
-      if (high > prevHigh) {
-        this.isUptrend = true;
-        this.currentSAR = prevLow;
-        this.extremePoint = high;
-      } else {
-        this.isUptrend = false;
-        this.currentSAR = prevHigh;
-        this.extremePoint = low;
-      }
-      
-      this.initialized = true;
-      return this.currentSAR;
-    }
-
-    // Calculate new SAR
-    let newSAR = this.currentSAR! + this.accelerationFactor * (this.extremePoint! - this.currentSAR!);
-    
-    const prevHigh = this.highValues[this.highValues.length - 2];
-    const prevLow = this.lowValues[this.lowValues.length - 2];
-
-    if (this.isUptrend) {
-      if (low <= newSAR) {
-        // Trend reversal
-        this.isUptrend = false;
-        newSAR = this.extremePoint!;
-        this.extremePoint = low;
-        this.accelerationFactor = this.step;
-      } else {
-        // Continue uptrend
-        if (high > this.extremePoint!) {
-          this.extremePoint = high;
-          this.accelerationFactor = Math.min(this.accelerationFactor + this.step, this.max);
+    if (this.prev) {
+      if (this.prev && this.curr) {
+        this.sar = this.sar! + this.accel * (this.extreme! - this.sar!);
+        
+        if (this.up) {
+          this.sar = Math.min(this.sar, this.furthest!.low, this.prev.low);
+          if (this.curr.high > this.extreme!) {
+            this.extreme = this.curr.high;
+            this.accel = Math.min(this.accel + this.step, this.max);
+          }
+        } else {
+          this.sar = Math.max(this.sar, this.furthest!.high, this.prev.high);
+          if (this.curr.low < this.extreme!) {
+            this.extreme = this.curr.low;
+            this.accel = Math.min(this.accel + this.step, this.max);
+          }
         }
-        newSAR = Math.min(newSAR, prevLow, low);
+        
+        if ((this.up && this.curr.low < this.sar) || (!this.up && this.curr.high > this.sar)) {
+          this.accel = this.step;
+          this.sar = this.extreme!;
+          this.up = !this.up;
+          this.extreme = !this.up ? this.curr.low : this.curr.high;
+        }
       }
     } else {
-      if (high >= newSAR) {
-        // Trend reversal
-        this.isUptrend = true;
-        newSAR = this.extremePoint!;
-        this.extremePoint = high;
-        this.accelerationFactor = this.step;
-      } else {
-        // Continue downtrend
-        if (low < this.extremePoint!) {
-          this.extremePoint = low;
-          this.accelerationFactor = Math.min(this.accelerationFactor + this.step, this.max);
-        }
-        newSAR = Math.max(newSAR, prevHigh, high);
-      }
+      // Initialize on first data point
+      this.sar = this.curr.low;
+      this.extreme = this.curr.high;
     }
 
-    this.currentSAR = newSAR;
-    return this.currentSAR;
+    this.furthest = this.prev || this.curr;
+    if (this.curr) {
+      this.prev = this.curr;
+    }
+    
+    this.results.push(this.sar!);
+    return this.sar;
   }
 
   getResult(): number[] {
-    if (this.currentSAR === undefined) {
-      return [];
-    }
-    return [this.currentSAR];
+    return this.results;
   }
 
   static calculate = psar;

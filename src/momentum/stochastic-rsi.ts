@@ -25,7 +25,9 @@ export function stochasticrsi(input: StochasticRSIInput): StochasticRSIOutput[] 
     values 
   } = input;
   
-  if (values.length < rsiPeriod + stochasticPeriod) {
+  // Need enough data for full calculation
+  const requiredLength = rsiPeriod + stochasticPeriod + kPeriod + dPeriod - 1;
+  if (values.length < requiredLength) {
     return [];
   }
 
@@ -61,16 +63,18 @@ export function stochasticrsi(input: StochasticRSIInput): StochasticRSIOutput[] 
   // Calculate %D (SMA of %K)
   const dValues = sma({ period: dPeriod, values: kValues });
   
-  // Combine results
-  for (let i = 0; i < stochRSIValues.length; i++) {
-    const kValue = i >= kPeriod - 1 ? kValues[i - kPeriod + 1] : undefined;
-    const dValue = (kValues.length > 0 && i >= kPeriod + dPeriod - 2) 
-      ? dValues[i - kPeriod - dPeriod + 2] : undefined;
+  // Only return results when we have complete D values
+  // This means we start from kPeriod + dPeriod - 2 index in stochRSI
+  const startIndex = kPeriod + dPeriod - 2;
+  
+  for (let i = startIndex; i < stochRSIValues.length; i++) {
+    const kIndex = i - kPeriod + 1;
+    const dIndex = i - kPeriod - dPeriod + 2;
     
     result.push({
       stochRSI: stochRSIValues[i],
-      k: kValue,
-      d: dValue
+      k: kValues[kIndex],
+      d: dValues[dIndex]
     });
   }
   
@@ -135,7 +139,7 @@ export class StochasticRSI {
             this.initialized = true;
             
             const rs = this.avgLoss === 0 ? 100 : this.avgGain / this.avgLoss;
-            return 100 - (100 / (1 + rs));
+            return parseFloat((100 - (100 / (1 + rs))).toFixed(2));
           }
           return undefined;
         }
@@ -144,7 +148,7 @@ export class StochasticRSI {
         this.avgLoss = ((this.avgLoss * (this.period - 1)) + loss) / this.period;
         
         const rs = this.avgLoss === 0 ? 100 : this.avgGain / this.avgLoss;
-        return 100 - (100 / (1 + rs));
+        return parseFloat((100 - (100 / (1 + rs))).toFixed(2));
       }
     };
   }
@@ -203,6 +207,11 @@ export class StochasticRSI {
     // Calculate %K and %D
     const kValue = this.kCalculator.nextValue(stochRSI);
     const dValue = kValue !== undefined ? this.dCalculator.nextValue(kValue) : undefined;
+    
+    // Only return when we have complete %D values (same logic as functional version)
+    if (dValue === undefined) {
+      return undefined;
+    }
     
     return {
       stochRSI: stochRSI,
