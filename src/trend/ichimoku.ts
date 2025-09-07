@@ -33,60 +33,52 @@ export function ichimokukinkouhyou(input: IchimokuInput): IchimokuOutput[] {
   }
 
   const result: IchimokuOutput[] = [];
-  const maxPeriod = Math.max(conversionPeriod, basePeriod, spanPeriod);
+  const period = Math.max(conversionPeriod, basePeriod, spanPeriod, displacement);
 
-  for (let i = 0; i < high.length; i++) {
-    const output: IchimokuOutput = {};
+  // Only start producing results after the maximum period is reached
+  for (let i = period - 1; i < high.length; i++) {
+    // Conversion Line (Tenkan-sen): (conversionPeriod-high + conversionPeriod-low)/2
+    const conversionHigh = highest({ 
+      values: high.slice(i - conversionPeriod + 1, i + 1), 
+      period: conversionPeriod 
+    })[0];
+    const conversionLow = lowest({ 
+      values: low.slice(i - conversionPeriod + 1, i + 1), 
+      period: conversionPeriod 
+    })[0];
+    const conversion = (conversionHigh + conversionLow) / 2;
 
-    // Conversion Line (Tenkan-sen)
-    if (i >= conversionPeriod - 1) {
-      const conversionHigh = highest({ 
-        values: high.slice(i - conversionPeriod + 1, i + 1), 
-        period: conversionPeriod 
-      })[0];
-      const conversionLow = lowest({ 
-        values: low.slice(i - conversionPeriod + 1, i + 1), 
-        period: conversionPeriod 
-      })[0];
-      output.conversion = (conversionHigh + conversionLow) / 2;
-    }
+    // Base Line (Kijun-sen): (basePeriod-high + basePeriod-low)/2
+    const baseHigh = highest({ 
+      values: high.slice(i - basePeriod + 1, i + 1), 
+      period: basePeriod 
+    })[0];
+    const baseLow = lowest({ 
+      values: low.slice(i - basePeriod + 1, i + 1), 
+      period: basePeriod 
+    })[0];
+    const base = (baseHigh + baseLow) / 2;
 
-    // Base Line (Kijun-sen)
-    if (i >= basePeriod - 1) {
-      const baseHigh = highest({ 
-        values: high.slice(i - basePeriod + 1, i + 1), 
-        period: basePeriod 
-      })[0];
-      const baseLow = lowest({ 
-        values: low.slice(i - basePeriod + 1, i + 1), 
-        period: basePeriod 
-      })[0];
-      output.base = (baseHigh + baseLow) / 2;
-    }
+    // Leading Span A (Senkou Span A): (Conversion Line + Base Line)/2
+    const spanA = (conversion + base) / 2;
 
-    // Leading Span A (Senkou Span A) - projected displacement periods ahead
-    if (output.conversion !== undefined && output.base !== undefined) {
-      output.spanA = (output.conversion + output.base) / 2;
-    }
+    // Leading Span B (Senkou Span B): (spanPeriod-high + spanPeriod-low)/2
+    const spanBHigh = highest({ 
+      values: high.slice(i - spanPeriod + 1, i + 1), 
+      period: spanPeriod 
+    })[0];
+    const spanBLow = lowest({ 
+      values: low.slice(i - spanPeriod + 1, i + 1), 
+      period: spanPeriod 
+    })[0];
+    const spanB = (spanBHigh + spanBLow) / 2;
 
-    // Leading Span B (Senkou Span B) - projected displacement periods ahead  
-    if (i >= spanPeriod - 1) {
-      const spanHigh = highest({ 
-        values: high.slice(i - spanPeriod + 1, i + 1), 
-        period: spanPeriod 
-      })[0];
-      const spanLow = lowest({ 
-        values: low.slice(i - spanPeriod + 1, i + 1), 
-        period: spanPeriod 
-      })[0];
-      output.spanB = (spanHigh + spanLow) / 2;
-    }
-
-    // Lagging Span (Chikou Span) - current close displaced back
-    // Note: This would typically use close prices, but we only have high/low
-    // Using midpoint of high/low as approximation
-    const midPrice = (high[i] + low[i]) / 2;
-    output.lagging = midPrice;
+    const output: IchimokuOutput = {
+      conversion,
+      base,
+      spanA,
+      spanB
+    };
 
     result.push(output);
   }
@@ -101,17 +93,27 @@ export class IchimokuKinkouhyou {
   private displacement: number;
   private highValues: number[] = [];
   private lowValues: number[] = [];
+  private result: IchimokuOutput[] = [];
+  private period: number;
 
   constructor(input: IchimokuInput) {
     this.conversionPeriod = input.conversionPeriod || 9;
     this.basePeriod = input.basePeriod || 26;
     this.spanPeriod = input.spanPeriod || 52;
     this.displacement = input.displacement || 26;
+    this.period = Math.max(this.conversionPeriod, this.basePeriod, this.spanPeriod, this.displacement);
 
     if (input.high && input.low && input.high.length === input.low.length) {
-      for (let i = 0; i < input.high.length; i++) {
-        this.nextValue(input.high[i], input.low[i]);
-      }
+      this.highValues = [...input.high];
+      this.lowValues = [...input.low];
+      this.result = ichimokukinkouhyou({
+        high: this.highValues,
+        low: this.lowValues,
+        conversionPeriod: this.conversionPeriod,
+        basePeriod: this.basePeriod,
+        spanPeriod: this.spanPeriod,
+        displacement: this.displacement
+      });
     }
   }
 
@@ -119,17 +121,53 @@ export class IchimokuKinkouhyou {
     this.highValues.push(high);
     this.lowValues.push(low);
 
-    const result = ichimokukinkouhyou({
-      high: this.highValues,
-      low: this.lowValues,
-      conversionPeriod: this.conversionPeriod,
-      basePeriod: this.basePeriod,
-      spanPeriod: this.spanPeriod,
-      displacement: this.displacement
-    });
+    // Only return a value once we have enough data
+    if (this.highValues.length >= this.period) {
+      const currentIndex = this.highValues.length - 1;
+      const i = currentIndex;
 
-    if (result.length > 0) {
-      return result[result.length - 1];
+      // Calculate the same way as the functional version
+      const conversionHigh = highest({ 
+        values: this.highValues.slice(i - this.conversionPeriod + 1, i + 1), 
+        period: this.conversionPeriod 
+      })[0];
+      const conversionLow = lowest({ 
+        values: this.lowValues.slice(i - this.conversionPeriod + 1, i + 1), 
+        period: this.conversionPeriod 
+      })[0];
+      const conversion = (conversionHigh + conversionLow) / 2;
+
+      const baseHigh = highest({ 
+        values: this.highValues.slice(i - this.basePeriod + 1, i + 1), 
+        period: this.basePeriod 
+      })[0];
+      const baseLow = lowest({ 
+        values: this.lowValues.slice(i - this.basePeriod + 1, i + 1), 
+        period: this.basePeriod 
+      })[0];
+      const base = (baseHigh + baseLow) / 2;
+
+      const spanA = (conversion + base) / 2;
+
+      const spanBHigh = highest({ 
+        values: this.highValues.slice(i - this.spanPeriod + 1, i + 1), 
+        period: this.spanPeriod 
+      })[0];
+      const spanBLow = lowest({ 
+        values: this.lowValues.slice(i - this.spanPeriod + 1, i + 1), 
+        period: this.spanPeriod 
+      })[0];
+      const spanB = (spanBHigh + spanBLow) / 2;
+
+      const output: IchimokuOutput = {
+        conversion,
+        base,
+        spanA,
+        spanB
+      };
+
+      this.result.push(output);
+      return output;
     }
 
     return undefined;
@@ -148,3 +186,7 @@ export class IchimokuKinkouhyou {
 
   static calculate = ichimokukinkouhyou;
 }
+
+// Alias for compatibility with technicalindicators package
+export const IchimokuCloud = IchimokuKinkouhyou;
+export const ichimokucloud = ichimokukinkouhyou;

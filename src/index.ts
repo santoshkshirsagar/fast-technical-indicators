@@ -49,7 +49,7 @@ export { plusdm, PlusDM } from './directional-movement/plus-dm';
 export { minusdm, MinusDM } from './directional-movement/minus-dm';
 
 // Trend
-export { ichimokukinkouhyou, IchimokuKinkouhyou } from './trend/ichimoku';
+export { ichimokukinkouhyou, IchimokuKinkouhyou, IchimokuCloud } from './trend/ichimoku';
 export { supertrend, SuperTrend } from './trend/supertrend';
 export { aroon, Aroon } from './trend/aroon';
 export { aroonoscillator, AroonOscillator } from './trend/aroon-oscillator';
@@ -87,6 +87,8 @@ export { bullishmarubozu, BullishMarubozu } from './candlestick/bullish-marubozu
 export { bearishmarubozu, BearishMarubozu } from './candlestick/bearish-marubozu';
 export { bullishinvertedhammer, BullishInvertedHammer } from './candlestick/bullish-inverted-hammer';
 export { bearishinvertedhammer, BearishInvertedHammer } from './candlestick/bearish-inverted-hammer';
+export { bullishinvertedhammerstick, BullishInvertedHammerStick } from './candlestick/bullish-inverted-hammer-stick';
+export { bearishinvertedhammerstick, BearishInvertedHammerStick } from './candlestick/bearish-inverted-hammer-stick';
 export { morningdojistar, MorningDojiStar } from './candlestick/morning-doji-star';
 export { eveningdojistar, EveningDojiStar } from './candlestick/evening-doji-star';
 export { downsidetasukigap, DownsideTasukiGap } from './candlestick/downside-tasuki-gap';
