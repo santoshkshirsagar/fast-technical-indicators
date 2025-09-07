@@ -1,6 +1,9 @@
-import { IndicatorInput, NumberOrUndefined } from '../types';
+import { IndicatorInput } from '../types';
 
-export interface VolumeProfileInput {
+export interface VolumeProfileInput extends IndicatorInput {
+  open: number[];
+  high: number[];
+  low: number[];
   close: number[];
   volume: number[];
   noOfBars?: number;
@@ -9,73 +12,85 @@ export interface VolumeProfileInput {
 export interface VolumeProfileOutput {
   rangeStart: number;
   rangeEnd: number;
-  volume: number;
-  percentage: number;
+  bullishVolume: number;
+  bearishVolume: number;
+  totalVolume: number;
+}
+
+// Helper function to check if two ranges overlap (exactly like technicalindicators)
+function priceFallsBetweenBarRange(low: number, high: number, low1: number, high1: number): boolean {
+  return (low <= low1 && high >= low1) || (low1 <= low && high1 >= low);
 }
 
 export function volumeprofile(input: VolumeProfileInput): VolumeProfileOutput[] {
-  const { close, volume, noOfBars = 14 } = input;
+  const { open, high, low, close, volume, noOfBars = 14 } = input;
   
-  if (close.length !== volume.length || close.length === 0) {
+  if (!open || !high || !low || !close || !volume ||
+      open.length !== high.length || 
+      high.length !== low.length || 
+      low.length !== close.length || 
+      close.length !== volume.length || 
+      close.length === 0) {
     return [];
   }
 
-  const minPrice = Math.min(...close);
-  const maxPrice = Math.max(...close);
-  const priceRange = maxPrice - minPrice;
-  
-  if (priceRange === 0) {
-    return [{
-      rangeStart: minPrice,
-      rangeEnd: maxPrice,
-      volume: volume.reduce((sum, v) => sum + v, 0),
-      percentage: 100
-    }];
-  }
-
-  const barSize = priceRange / noOfBars;
-  const volumeBars: number[] = new Array(noOfBars).fill(0);
-
-  // Distribute volume into price bars
-  for (let i = 0; i < close.length; i++) {
-    const price = close[i];
-    const vol = volume[i];
-    
-    // Determine which bar this price falls into
-    let barIndex = Math.floor((price - minPrice) / barSize);
-    
-    // Handle edge case where price equals maxPrice
-    if (barIndex >= noOfBars) {
-      barIndex = noOfBars - 1;
-    }
-    
-    volumeBars[barIndex] += vol;
-  }
-
-  const totalVolume = volume.reduce((sum, v) => sum + v, 0);
   const result: VolumeProfileOutput[] = [];
-
-  // Create output
+  
+  // Find price range across all OHLC data (exactly like reference)
+  const max = Math.max(...high, ...low, ...close, ...open);
+  const min = Math.min(...high, ...low, ...close, ...open);
+  const barRange = (max - min) / noOfBars;
+  
+  let lastEnd = min;
+  
+  // Create each volume profile bar
   for (let i = 0; i < noOfBars; i++) {
-    const rangeStart = minPrice + (i * barSize);
-    const rangeEnd = minPrice + ((i + 1) * barSize);
-    const barVolume = volumeBars[i];
-    const percentage = totalVolume > 0 ? (barVolume / totalVolume) * 100 : 0;
-
-    if (barVolume > 0) {
-      result.push({
-        rangeStart,
-        rangeEnd,
-        volume: barVolume,
-        percentage
-      });
+    const rangeStart = lastEnd;
+    const rangeEnd = rangeStart + barRange;
+    lastEnd = rangeEnd;
+    
+    let bullishVolume = 0;
+    let bearishVolume = 0;
+    let totalVolume = 0;
+    
+    // Check each price bar (candle) against this volume profile bar
+    for (let priceBar = 0; priceBar < high.length; priceBar++) {
+      const priceBarStart = low[priceBar];
+      const priceBarEnd = high[priceBar];
+      const priceBarOpen = open[priceBar];
+      const priceBarClose = close[priceBar];
+      const priceBarVolume = volume[priceBar];
+      
+      // Check if this candle's range overlaps with current volume profile bar range
+      if (priceFallsBetweenBarRange(rangeStart, rangeEnd, priceBarStart, priceBarEnd)) {
+        totalVolume = totalVolume + priceBarVolume;
+        
+        // Note: Reference uses open > close for bearish (opposite of what I initially thought)
+        if (priceBarOpen > priceBarClose) {
+          bearishVolume = bearishVolume + priceBarVolume;
+        } else {
+          bullishVolume = bullishVolume + priceBarVolume;
+        }
+      }
     }
+    
+    // Always include all bars (even with 0 volume) - but we'll filter them out later if needed
+    result.push({
+      rangeStart,
+      rangeEnd,
+      bullishVolume,
+      bearishVolume,
+      totalVolume
+    });
   }
-
+  
   return result;
 }
 
 export class VolumeProfile {
+  private openValues: number[] = [];
+  private highValues: number[] = [];
+  private lowValues: number[] = [];
   private closeValues: number[] = [];
   private volumeValues: number[] = [];
   private noOfBars: number;
@@ -83,20 +98,35 @@ export class VolumeProfile {
   constructor(input: VolumeProfileInput) {
     this.noOfBars = input.noOfBars || 14;
     
-    if (input.close?.length && input.volume?.length) {
-      for (let i = 0; i < Math.min(input.close.length, input.volume.length); i++) {
-        this.nextValue(input.close[i], input.volume[i]);
+    if (input.open?.length && input.high?.length && input.low?.length && 
+        input.close?.length && input.volume?.length) {
+      const minLength = Math.min(
+        input.open.length,
+        input.high.length, 
+        input.low.length,
+        input.close.length,
+        input.volume.length
+      );
+      
+      for (let i = 0; i < minLength; i++) {
+        this.nextValue(input.open[i], input.high[i], input.low[i], input.close[i], input.volume[i]);
       }
     }
   }
 
-  nextValue(close: number, volume: number): void {
+  nextValue(open: number, high: number, low: number, close: number, volume: number): void {
+    this.openValues.push(open);
+    this.highValues.push(high);
+    this.lowValues.push(low);
     this.closeValues.push(close);
     this.volumeValues.push(volume);
   }
 
   getResult(): VolumeProfileOutput[] {
     return volumeprofile({
+      open: this.openValues,
+      high: this.highValues,
+      low: this.lowValues,
       close: this.closeValues,
       volume: this.volumeValues,
       noOfBars: this.noOfBars
