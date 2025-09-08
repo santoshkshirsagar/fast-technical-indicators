@@ -62,7 +62,8 @@ export function supertrend(input: SuperTrendInput): SuperTrendOutput[] {
   const atrValues = calculateATR(high, low, close, period);
   const result: SuperTrendOutput[] = [];
   
-  let previousSuperTrend: number | undefined;
+  let previousFinalUpperBand: number | undefined;
+  let previousFinalLowerBand: number | undefined;
   let previousDirection: number | undefined;
   
   for (let i = 0; i < atrValues.length; i++) {
@@ -82,17 +83,15 @@ export function supertrend(input: SuperTrendInput): SuperTrendOutput[] {
       finalUpperBand = basicUpperBand;
       finalLowerBand = basicLowerBand;
     } else {
-      const prevFinalUpperBand = result[i - 1].supertrend!;
-      const prevFinalLowerBand = result[i - 1].supertrend!;
       const prevClose = close[idx - 1];
       
       // Final Upper Band = Basic Upper Band < Final Upper Band[1] or Close[1] > Final Upper Band[1] ? Basic Upper Band : Final Upper Band[1]
-      finalUpperBand = (basicUpperBand < prevFinalUpperBand || prevClose > prevFinalUpperBand) ? 
-        basicUpperBand : prevFinalUpperBand;
+      finalUpperBand = (basicUpperBand < previousFinalUpperBand! || prevClose > previousFinalUpperBand!) ? 
+        basicUpperBand : previousFinalUpperBand!;
       
       // Final Lower Band = Basic Lower Band > Final Lower Band[1] or Close[1] < Final Lower Band[1] ? Basic Lower Band : Final Lower Band[1]
-      finalLowerBand = (basicLowerBand > prevFinalLowerBand || prevClose < prevFinalLowerBand) ? 
-        basicLowerBand : prevFinalLowerBand;
+      finalLowerBand = (basicLowerBand > previousFinalLowerBand! || prevClose < previousFinalLowerBand!) ? 
+        basicLowerBand : previousFinalLowerBand!;
     }
     
     // Determine trend direction and SuperTrend value
@@ -109,20 +108,22 @@ export function supertrend(input: SuperTrendInput): SuperTrendOutput[] {
         supertrendValue = finalLowerBand;
       }
     } else {
-      const prevDirection = result[i - 1].direction!;
-      const prevClose = close[idx - 1];
-      
-      if (prevDirection === 1 && close[idx] <= finalLowerBand) {
+      if (previousDirection === 1 && close[idx] <= finalLowerBand) {
         direction = -1;
         supertrendValue = finalUpperBand;
-      } else if (prevDirection === -1 && close[idx] >= finalUpperBand) {
+      } else if (previousDirection === -1 && close[idx] >= finalUpperBand) {
         direction = 1;
         supertrendValue = finalLowerBand;
       } else {
-        direction = prevDirection;
+        direction = previousDirection!;
         supertrendValue = direction === 1 ? finalLowerBand : finalUpperBand;
       }
     }
+    
+    // Store current values for next iteration
+    previousFinalUpperBand = finalUpperBand;
+    previousFinalLowerBand = finalLowerBand;
+    previousDirection = direction;
     
     result.push({
       supertrend: supertrendValue,
@@ -144,7 +145,8 @@ export class SuperTrend {
   private initialized: boolean = false;
   private supertrendValue: number | undefined;
   private direction: number | undefined;
-  private previousSuperTrend: number | undefined;
+  private previousFinalUpperBand: number | undefined;
+  private previousFinalLowerBand: number | undefined;
   private previousDirection: number | undefined;
 
   constructor(input: SuperTrendInput) {
@@ -191,17 +193,17 @@ export class SuperTrend {
     let finalUpperBand: number;
     let finalLowerBand: number;
     
-    if (this.previousSuperTrend === undefined) {
+    if (this.previousFinalUpperBand === undefined || this.previousFinalLowerBand === undefined) {
       finalUpperBand = basicUpperBand;
       finalLowerBand = basicLowerBand;
     } else {
       const prevClose = this.closeValues[this.closeValues.length - 2];
       
-      finalUpperBand = (basicUpperBand < this.previousSuperTrend || prevClose > this.previousSuperTrend) ? 
-        basicUpperBand : this.previousSuperTrend;
+      finalUpperBand = (basicUpperBand < this.previousFinalUpperBand || prevClose > this.previousFinalUpperBand) ? 
+        basicUpperBand : this.previousFinalUpperBand;
       
-      finalLowerBand = (basicLowerBand > this.previousSuperTrend || prevClose < this.previousSuperTrend) ? 
-        basicLowerBand : this.previousSuperTrend;
+      finalLowerBand = (basicLowerBand > this.previousFinalLowerBand || prevClose < this.previousFinalLowerBand) ? 
+        basicLowerBand : this.previousFinalLowerBand;
     }
     
     // Determine trend direction and SuperTrend value
@@ -228,7 +230,8 @@ export class SuperTrend {
     }
     
     // Store for next iteration
-    this.previousSuperTrend = this.supertrendValue;
+    this.previousFinalUpperBand = finalUpperBand;
+    this.previousFinalLowerBand = finalLowerBand;
     this.previousDirection = this.direction;
     
     return {
