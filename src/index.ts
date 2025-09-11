@@ -45,6 +45,7 @@ export { volatilityindex, VolatilityIndex } from './volatility/volatility-index'
 // Directional Movement
 export { truerange, TrueRange } from './directional-movement/true-range';
 export { adx, ADX } from './directional-movement/adx';
+export { dmi, DMI } from './directional-movement/dmi';
 export { plusdm, PlusDM } from './directional-movement/plus-dm';
 export { minusdm, MinusDM } from './directional-movement/minus-dm';
 

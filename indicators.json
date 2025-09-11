@@ -142,15 +142,36 @@
             "high": "array",
             "low": "array",
             "close": "array",
-            "period": "number"
+            "period": "number",
+            "smoothingPeriod": "number"
         },
         "default": {
-            "period": 14
+            "period": 14,
+            "smoothingPeriod": 14
         },
         "outputs": {
             "adx": "number",
             "pdi": "number",
             "mdi": "number"
+        }
+    },
+    "dmi": {
+        "label": "Directional Movement Index",
+        "inputs": {
+            "high": "array",
+            "low": "array",
+            "close": "array",
+            "period": "number",
+            "adxSmoothing": "number"
+        },
+        "default": {
+            "period": 14,
+            "adxSmoothing": 14
+        },
+        "outputs": {
+            "pdi": "number",
+            "mdi": "number",
+            "adx": "number"
         }
     },
     "atr": {

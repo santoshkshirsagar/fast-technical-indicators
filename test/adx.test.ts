@@ -114,4 +114,38 @@ describe('ADX (Average Directional Index)', () => {
     });
     expect(shortDataResult).toEqual([]);
   });
+
+  test('should work with different smoothing period', () => {
+    const regularResult = adx({ 
+      period: 14,
+      high: smallTestData.high, 
+      low: smallTestData.low, 
+      close: smallTestData.close 
+    });
+    
+    const differentSmoothingResult = adx({ 
+      period: 14,
+      smoothingPeriod: 10,
+      high: smallTestData.high, 
+      low: smallTestData.low, 
+      close: smallTestData.close 
+    });
+    
+    // Should have results
+    expect(regularResult.length).toBeGreaterThan(0);
+    expect(differentSmoothingResult.length).toBeGreaterThan(0);
+    
+    // Results should be different due to different smoothing
+    if (regularResult.length > 0 && differentSmoothingResult.length > 0) {
+      const lastRegular = regularResult[regularResult.length - 1];
+      const lastDifferent = differentSmoothingResult[differentSmoothingResult.length - 1];
+      
+      // ADX values should be different
+      expect(lastRegular.adx).not.toBeCloseTo(lastDifferent.adx!, 2);
+      
+      // PDI and MDI should be the same (only ADX smoothing changes)
+      expect(lastRegular.pdi).toBeCloseTo(lastDifferent.pdi!, 4);
+      expect(lastRegular.mdi).toBeCloseTo(lastDifferent.mdi!, 4);
+    }
+  });
 });
